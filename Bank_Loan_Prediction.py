@@ -3,7 +3,7 @@ from PIL import Image
 import pickle
 
 
-model = pickle.load(open('./Model/ML_Model.pkl', 'rb'))
+model = pickle.load(open('ML_Model.pkl', 'rb'))
 
 def run():
     img1 = Image.open('bank.png')
