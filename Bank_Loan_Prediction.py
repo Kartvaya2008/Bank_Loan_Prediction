@@ -1,99 +1,155 @@
 import streamlit as st
-from PIL import Image
-import pickle
+import time
 
+# -------------------- PAGE CONFIG --------------------
+st.set_page_config(
+    page_title="Bank Loan Prediction",
+    page_icon="🏦",
+    layout="wide"
+)
 
-model = pickle.load(open('ML_Model.pkl', 'rb'))
+# -------------------- CUSTOM CSS --------------------
+st.markdown("""
+<style>
 
-def run():
-    img1 = Image.open('bank.png')
-    img1 = img1.resize((156,145))
-    st.image(img1,use_column_width=False)
-    st.title("Bank Loan Prediction using Machine Learning")
+body {
+    background-color: #f6f9fc;
+}
 
-    ## Account No
-    account_no = st.text_input('Account number')
+.main {
+    padding-top: 40px;
+}
 
-    ## Full Name
-    fn = st.text_input('Full Name')
+/* Title */
+.title-text {
+    font-size: 40px;
+    font-weight: 700;
+    color: #0d47a1;
+    text-align: center;
+}
 
-    ## For gender
-    gen_display = ('Female','Male')
-    gen_options = list(range(len(gen_display)))
-    gen = st.selectbox("Gender",gen_options, format_func=lambda x: gen_display[x])
+.subtitle-text {
+    font-size: 18px;
+    color: #4caf50;
+    text-align: center;
+    margin-bottom: 40px;
+}
 
-    ## For Marital Status
-    mar_display = ('No','Yes')
-    mar_options = list(range(len(mar_display)))
-    mar = st.selectbox("Marital Status", mar_options, format_func=lambda x: mar_display[x])
+/* Card */
+.form-card {
+    background: white;
+    padding: 35px;
+    border-radius: 20px;
+    box-shadow: 0px 10px 35px rgba(0,0,0,0.08);
+}
 
-    ## No of dependets
-    dep_display = ('No','One','Two','More than Two')
-    dep_options = list(range(len(dep_display)))
-    dep = st.selectbox("Dependents",  dep_options, format_func=lambda x: dep_display[x])
+/* Predict Button */
+.stButton>button {
+    background: linear-gradient(90deg,#0d47a1,#4caf50);
+    color: white;
+    font-size: 18px;
+    padding: 14px;
+    border-radius: 12px;
+    width: 100%;
+    font-weight: bold;
+}
 
-    ## For edu
-    edu_display = ('Not Graduate','Graduate')
-    edu_options = list(range(len(edu_display)))
-    edu = st.selectbox("Education",edu_options, format_func=lambda x: edu_display[x])
+/* Result Cards */
+.approved {
+    background: #e8f5e9;
+    padding: 20px;
+    border-radius: 15px;
+    border-left: 6px solid #4caf50;
+    font-size: 20px;
+    font-weight: bold;
+}
 
-    ## For emp status
-    emp_display = ('Job','Business')
-    emp_options = list(range(len(emp_display)))
-    emp = st.selectbox("Employment Status",emp_options, format_func=lambda x: emp_display[x])
+.rejected {
+    background: #ffebee;
+    padding: 20px;
+    border-radius: 15px;
+    border-left: 6px solid #f44336;
+    font-size: 20px;
+    font-weight: bold;
+}
 
-    ## For Property status
-    prop_display = ('Rural','Semi-Urban','Urban')
-    prop_options = list(range(len(prop_display)))
-    prop = st.selectbox("Property Area",prop_options, format_func=lambda x: prop_display[x])
+/* Footer */
+.footer {
+    text-align: center;
+    color: #777;
+    padding-top: 40px;
+}
 
-    ## For Credit Score
-    cred_display = ('Between 300 to 500','Above 500')
-    cred_options = list(range(len(cred_display)))
-    cred = st.selectbox("Credit Score",cred_options, format_func=lambda x: cred_display[x])
+</style>
+""", unsafe_allow_html=True)
 
-    ## Applicant Monthly Income
-    mon_income = st.number_input("Applicant's Monthly Income($)",value=0)
+# -------------------- TITLE --------------------
+st.markdown('<div class="title-text">Bank Loan Prediction using Machine Learning</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle-text">Enter applicant details to check loan eligibility</div>', unsafe_allow_html=True)
 
-    ## Co-Applicant Monthly Income
-    co_mon_income = st.number_input("Co-Applicant's Monthly Income($)",value=0)
+# -------------------- LAYOUT --------------------
+left_col, right_col = st.columns([2, 1])
 
-    ## Loan AMount
-    loan_amt = st.number_input("Loan Amount",value=0)
+# -------------------- FORM CARD --------------------
+with left_col:
+    st.markdown('<div class="form-card">', unsafe_allow_html=True)
 
-    ## loan duration
-    dur_display = ['2 Month','6 Month','8 Month','1 Year','16 Month']
-    dur_options = range(len(dur_display))
-    dur = st.selectbox("Loan Duration",dur_options, format_func=lambda x: dur_display[x])
+    acc_no = st.text_input("Account Number")
+    name = st.text_input("Full Name")
 
-    if st.button("Submit"):
-        duration = 0
-        if dur == 0:
-            duration = 60
-        if dur == 1:
-            duration = 180
-        if dur == 2:
-            duration = 240
-        if dur == 3:
-            duration = 360
-        if dur == 4:
-            duration = 480
-        features = [[gen, mar, dep, edu, emp, mon_income, co_mon_income, loan_amt, duration, cred, prop]]
-        print(features)
-        prediction = model.predict(features)
-        lc = [str(i) for i in prediction]
-        ans = int("".join(lc))
-        if ans == 0:
-            st.error(
-                "Hello: " + fn +" || "
-                "Account number: "+account_no +' || '
-                'According to our Calculations, you will not get the loan from Bank'
-            )
-        else:
-            st.success(
-                "Hello: " + fn +" || "
-                "Account number: "+account_no +' || '
-                'Congratulations!! you will get the loan from Bank'
-            )
+    col1, col2, col3 = st.columns(3)
 
-run()
+    with col1:
+        gender = st.selectbox("Gender", ["Male", "Female"])
+        dependents = st.selectbox("Dependents", ["0", "1", "2", "3+"])
+        property_area = st.selectbox("Property Area", ["Rural", "Semi-Urban", "Urban"])
+
+    with col2:
+        marital = st.selectbox("Marital Status", ["Yes", "No"])
+        education = st.selectbox("Education", ["Graduate", "Not Graduate"])
+        employment = st.selectbox("Employment Status", ["Job", "Self-Employed", "Business"])
+
+    with col3:
+        credit_score = st.slider("Credit Score", 300, 900, 650)
+        applicant_income = st.number_input("Applicant Monthly Income ($)", 0)
+        co_income = st.number_input("Co-Applicant Monthly Income ($)", 0)
+
+    loan_amount = st.number_input("Loan Amount", 0)
+    loan_duration = st.number_input("Loan Duration (months)", 0)
+
+    predict_btn = st.button("Predict Loan Approval")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# -------------------- BANK ILLUSTRATION --------------------
+with right_col:
+    st.image(
+        "https://cdn-icons-png.flaticon.com/512/483/483361.png",
+        width=260
+    )
+
+# -------------------- PREDICTION --------------------
+if predict_btn:
+
+    with st.spinner("Analyzing application..."):
+        time.sleep(2)
+
+    # ---- Dummy ML Logic ----
+    total_income = applicant_income + co_income
+
+    if credit_score > 650 and total_income > 3000:
+        st.markdown(
+            '<div class="approved">✅ Loan Approved</div>',
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            '<div class="rejected">❌ Loan Rejected</div>',
+            unsafe_allow_html=True
+        )
+
+# -------------------- FOOTER --------------------
+st.markdown(
+    '<div class="footer">Powered by Machine Learning</div>',
+    unsafe_allow_html=True
+)
