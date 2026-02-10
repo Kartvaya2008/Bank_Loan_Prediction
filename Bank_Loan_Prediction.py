@@ -12,9 +12,6 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-body {
-    background-color: #f6f9fc;
-}
 
 .main {
     padding-top: 40px;
