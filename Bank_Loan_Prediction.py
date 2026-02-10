@@ -53,7 +53,7 @@ st.markdown("""
 
 /* Result Cards */
 .approved {
-    background: #e8f5e9;
+    background: hsl(125, 39%, 94%);
     padding: 20px;
     border-radius: 15px;
     border-left: 6px solid #4caf50;
@@ -79,6 +79,42 @@ st.markdown("""
 
 </style>
 """, unsafe_allow_html=True)
+/* ---------- INPUT FINTECH DARK THEME FIX ---------- */
+.stTextInput input,
+.stNumberInput input,
+.stSelectbox div[data-baseweb="select"],
+.stSlider > div {
+    background: linear-gradient(180deg,#1f2933,#111827) !important;
+    color: #e5e7eb !important;
+    border-radius: 12px !important;
+    border: 1px solid #2f3b46 !important;
+}
+
+/* Focus glow */
+.stTextInput input:focus,
+.stNumberInput input:focus {
+    outline: none !important;
+    border: 1px solid #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.25) !important;
+}
+
+/* Account Number height reduce */
+.stTextInput input {
+    height: 44px !important;
+}
+
+/* Illustration center */
+img {
+    margin-top: 80px;
+    opacity: 0.9;
+}
+
+/* Remove empty visual gap */
+div[data-testid="column"]:last-child {
+    display: flex;
+    justify-content: center;
+}
+
 
 # -------------------- SIDEBAR --------------------
 with st.sidebar:
