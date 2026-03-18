@@ -899,28 +899,34 @@ footer, [data-testid="stFooter"] {
 with st.sidebar:
     st.markdown("## FinBank AI")
     st.caption("Smart Loan Decision System")
-    
+
     st.divider()
-    
+
     page = st.radio(
         "Navigation",
         ["Loan Prediction", "Dashboard", "History", "Settings"],
         label_visibility="visible"
     )
-    
+
     st.divider()
-    
+
     st.markdown("### Quick Stats")
     st.metric("Predictions Today", st.session_state.prediction_count)
-    st.metric("Approval Rate", "63%")
-    
+    if st.session_state.loan_history:
+        approved_count = len([h for h in st.session_state.loan_history if h['approved']])
+        live_rate = (approved_count / len(st.session_state.loan_history)) * 100
+        st.metric("Approval Rate", f"{live_rate:.0f}%")
+    else:
+        st.metric("Approval Rate", "—")
+
     st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
-    
+
     if st.button("Clear History", use_container_width=True):
         st.session_state.loan_history = []
         st.session_state.prediction_count = 0
+        st.session_state.current_prediction = None
         st.success("History cleared!")
-    
+
     st.divider()
     st.markdown(
         "<p style='font-size:13px; color:#6b7280; font-family:Inter,sans-serif;"
@@ -932,55 +938,38 @@ with st.sidebar:
 def calculate_loan_score(data):
     score = 0
     factors = []
-    
-    # Credit Score (0-300 points)
+
     credit_score_pts = min(data['credit_score'], 900) / 3
     score += credit_score_pts
     factors.append(("Credit Score", credit_score_pts, 300))
-    
-    # Income to Loan Ratio
+
     total_income = data['applicant_income'] + data['co_income']
     if total_income > 0:
         income_ratio = (data['loan_amount'] * 1000) / (total_income * data['loan_duration'])
         income_pts = max(0, 250 - income_ratio * 25)
         score += income_pts
         factors.append(("Income Ratio", income_pts, 250))
-    
-    # Employment Stability
+
     employment_score = {
-        "Job": 150,
-        "Self-Employed": 100,
-        "Business": 120,
-        "Salaried": 150,
-        "Business Owner": 120,
-        "Freelancer": 80,
-        "Retired": 60
+        "Job": 150, "Self-Employed": 100, "Business": 120,
+        "Salaried": 150, "Business Owner": 120, "Freelancer": 80, "Retired": 60
     }.get(data['employment'], 80)
     score += employment_score
     factors.append(("Employment", employment_score, 150))
-    
-    # Education
+
     education_score = {
-        "Graduate": 100,
-        "Post Graduate": 120,
-        "Doctorate": 140,
-        "High School": 60
+        "Graduate": 100, "Post Graduate": 120, "Doctorate": 140, "High School": 60
     }.get(data['education'], 60)
     score += education_score
     factors.append(("Education", education_score, 140))
-    
-    # Property Area
-    property_score = {
-        "Urban": 80,
-        "Semi-Urban": 70,
-        "Rural": 50
-    }.get(data['property_area'], 50)
+
+    property_score = {"Urban": 80, "Semi-Urban": 70, "Rural": 50}.get(data['property_area'], 50)
     score += property_score
     factors.append(("Property Area", property_score, 80))
-    
+
     max_score = sum(f[2] for f in factors)
     approval_probability = (score / max_score) * 100
-    
+
     return {
         'score': score,
         'max_score': max_score,
@@ -990,251 +979,533 @@ def calculate_loan_score(data):
         'total_income': total_income
     }
 
+# -------------------- HELPER: RISK LEVEL --------------------
+def get_risk_level(prob):
+    if prob >= 75:
+        return "Low Risk", "#16a34a", "#f0fdf4", "#bbf7d0"
+    elif prob >= 50:
+        return "Medium Risk", "#d97706", "#fffbeb", "#fde68a"
+    else:
+        return "High Risk", "#dc2626", "#fef2f2", "#fecaca"
+
+# -------------------- HELPER: LIVE SCORE CARD --------------------
+def render_live_score(prob, total_income, loan_amount, loan_duration):
+    label, color, bg, border = get_risk_level(prob)
+    approved_text = "Likely Approved" if prob >= 65 else "Likely Rejected"
+    approved_color = "#16a34a" if prob >= 65 else "#dc2626"
+    bar_pct = int(prob)
+    emi = (loan_amount / loan_duration) * 1.08 if loan_duration > 0 else 0
+
+    st.markdown(f"""
+    <div style="background:{bg}; border:1.5px solid {border}; border-radius:12px;
+                padding:20px; margin-bottom:16px;">
+        <p style="font-size:11px; font-weight:600; letter-spacing:0.6px;
+                  text-transform:uppercase; color:#6b7280; margin:0 0 6px 0;
+                  font-family:Inter,sans-serif;">Live Score Preview</p>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <span style="font-size:32px; font-weight:700; color:{color};
+                         font-family:Inter,sans-serif;">{prob:.1f}%</span>
+            <span style="font-size:13px; font-weight:600; color:{approved_color};
+                         background:white; border:1px solid {border};
+                         border-radius:20px; padding:4px 12px;
+                         font-family:Inter,sans-serif;">{approved_text}</span>
+        </div>
+        <div style="background:#e5e7eb; border-radius:100px; height:8px; margin-bottom:10px; overflow:hidden;">
+            <div style="width:{bar_pct}%; background:{color}; height:100%;
+                        border-radius:100px; transition:width 0.4s ease;"></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+            <span style="width:8px; height:8px; border-radius:50%;
+                         background:{color}; display:inline-block;"></span>
+            <span style="font-size:13px; font-weight:500; color:{color};
+                         font-family:Inter,sans-serif;">{label}</span>
+        </div>
+        <div style="border-top:1px solid {border}; padding-top:12px; margin-top:4px;">
+            <p style="font-size:11px; font-weight:600; text-transform:uppercase;
+                      letter-spacing:0.5px; color:#9ca3af; margin:0 0 8px 0;
+                      font-family:Inter,sans-serif;">Loan Summary</p>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:13px; color:#6b7280; font-family:Inter,sans-serif;">Total Income</span>
+                    <span style="font-size:13px; font-weight:600; color:#1f2937; font-family:Inter,sans-serif;">${total_income:,.0f}/mo</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:13px; color:#6b7280; font-family:Inter,sans-serif;">Loan Amount</span>
+                    <span style="font-size:13px; font-weight:600; color:#1f2937; font-family:Inter,sans-serif;">${loan_amount:,.0f}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:13px; color:#6b7280; font-family:Inter,sans-serif;">Est. Monthly EMI</span>
+                    <span style="font-size:13px; font-weight:600; color:#2563eb; font-family:Inter,sans-serif;">${emi:,.0f}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# -------------------- HELPER: SCORE BREAKDOWN BARS --------------------
+def render_score_breakdown(factors):
+    st.markdown("""
+    <p style="font-size:15px; font-weight:600; color:#1f2937;
+              font-family:Inter,sans-serif; margin:16px 0 12px 0;">Score Breakdown</p>
+    """, unsafe_allow_html=True)
+    for factor, score, max_score in factors:
+        pct = int((score / max_score) * 100)
+        if pct >= 70:
+            bar_color = "#16a34a"
+        elif pct >= 45:
+            bar_color = "#d97706"
+        else:
+            bar_color = "#dc2626"
+        st.markdown(f"""
+        <div style="margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between;
+                        margin-bottom:5px; align-items:center;">
+                <span style="font-size:13px; font-weight:500; color:#374151;
+                             font-family:Inter,sans-serif;">{factor}</span>
+                <span style="font-size:13px; font-weight:600; color:{bar_color};
+                             font-family:Inter,sans-serif;">{pct}%</span>
+            </div>
+            <div style="background:#f0f4f8; border-radius:100px; height:8px; overflow:hidden;">
+                <div style="width:{pct}%; background:{bar_color}; height:100%;
+                            border-radius:100px;"></div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+# -------------------- HELPER: INLINE VALIDATION --------------------
+def render_validation(credit_score, applicant_income, co_income, loan_amount, loan_duration):
+    warnings = []
+    total_income = applicant_income + co_income
+    if credit_score < 600:
+        warnings.append(("Credit score below 600 — this significantly reduces approval chances.", "warning"))
+    if total_income < 2000:
+        warnings.append(("Combined income is very low. Consider adding a co-applicant.", "warning"))
+    if loan_amount > 0 and total_income > 0:
+        emi = (loan_amount / max(loan_duration, 1)) * 1.08
+        if emi > total_income * 0.5:
+            warnings.append((f"EMI (${emi:,.0f}/mo) exceeds 50% of income — high default risk.", "error"))
+    if loan_amount > total_income * 80:
+        warnings.append(("Loan amount is very high relative to income.", "warning"))
+    return warnings
+
 # -------------------- MAIN PAGE --------------------
 if page == "Loan Prediction":
     st.markdown('<h1 class="main-title">Bank Loan Prediction</h1>', unsafe_allow_html=True)
-    
+
+    # Defaults for live preview before tab2 inputs are rendered
+    if 'lp_income' not in st.session_state:
+        st.session_state.lp_income = 3000
+    if 'lp_co_income' not in st.session_state:
+        st.session_state.lp_co_income = 0
+    if 'lp_loan' not in st.session_state:
+        st.session_state.lp_loan = 50000
+    if 'lp_duration' not in st.session_state:
+        st.session_state.lp_duration = 36
+    if 'lp_credit' not in st.session_state:
+        st.session_state.lp_credit = 720
+    if 'lp_employment' not in st.session_state:
+        st.session_state.lp_employment = "Salaried"
+    if 'lp_education' not in st.session_state:
+        st.session_state.lp_education = "Graduate"
+    if 'lp_property' not in st.session_state:
+        st.session_state.lp_property = "Urban"
+
     col1, col2 = st.columns([3, 2])
-    
+
     with col1:
         st.markdown('<div class="form-card">', unsafe_allow_html=True)
-        
+
         tab1, tab2 = st.tabs(["Personal Info", "Financial Info"])
-        
+
         with tab1:
             name = st.text_input("Full Name", placeholder="John Smith")
             col_a, col_b = st.columns(2)
             with col_a:
-                age = st.slider("Age", 18, 70, 30)
-                marital = st.selectbox("Marital Status", ["Single", "Married", "Divorced", "Widowed"])
+                age = st.slider("Age", 18, 70, 30,
+                    help="Your current age in years.")
+                marital = st.selectbox("Marital Status",
+                    ["Single", "Married", "Divorced", "Widowed"])
             with col_b:
                 gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-                dependents = st.selectbox("Dependents", ["0", "1", "2", "3+"])
-            
-            education = st.selectbox("Education Level", ["High School", "Graduate", "Post Graduate", "Doctorate"])
-            employment = st.selectbox("Employment Type", ["Salaried", "Self-Employed", "Business Owner", "Freelancer", "Retired"])
-        
+                dependents = st.selectbox("Dependents", ["0", "1", "2", "3+"],
+                    help="Number of financial dependents.")
+
+            education = st.selectbox("Education Level",
+                ["High School", "Graduate", "Post Graduate", "Doctorate"],
+                help="Higher education increases approval probability.")
+            employment = st.selectbox("Employment Type",
+                ["Salaried", "Self-Employed", "Business Owner", "Freelancer", "Retired"],
+                help="Salaried and Business Owner have highest stability score.")
+            st.session_state.lp_employment = employment
+            st.session_state.lp_education = education
+
         with tab2:
             col_c, col_d = st.columns(2)
             with col_c:
-                applicant_income = st.number_input("Monthly Income ($)", 500, 50000, 3000, step=500)
-                credit_score = st.slider("Credit Score", 300, 900, 720)
+                applicant_income = st.number_input(
+                    "Monthly Income ($)", 500, 50000, 3000, step=500,
+                    help="Your gross monthly income in USD.")
+                credit_score = st.slider("Credit Score", 300, 900, 720,
+                    help="Higher score (750+) significantly increases approval chances.")
             with col_d:
-                co_income = st.number_input("Co-applicant Income ($)", 0, 50000, 0, step=500)
-                loan_amount = st.number_input("Loan Amount ($)", 1000, 1000000, 50000, step=1000)
-            
-            loan_duration = st.selectbox("Loan Term (months)", [12, 24, 36, 48, 60])
-            property_area = st.selectbox("Property Area", ["Urban", "Semi-Urban", "Rural"])
-        
+                co_income = st.number_input(
+                    "Co-applicant Income ($)", 0, 50000, 0, step=500,
+                    help="Co-applicant's monthly income (0 if none).")
+                loan_amount = st.number_input(
+                    "Loan Amount ($)", 1000, 1000000, 50000, step=1000,
+                    help="Total loan amount requested.")
+
+            loan_duration = st.selectbox("Loan Term (months)", [12, 24, 36, 48, 60],
+                index=2,
+                help="Longer terms reduce EMI but increase total interest paid.")
+            property_area = st.selectbox("Property Area",
+                ["Urban", "Semi-Urban", "Rural"],
+                help="Urban properties have higher approval rates.")
+
+            # Update session state for live preview
+            st.session_state.lp_income    = applicant_income
+            st.session_state.lp_co_income = co_income
+            st.session_state.lp_loan      = loan_amount
+            st.session_state.lp_duration  = loan_duration
+            st.session_state.lp_credit    = credit_score
+            st.session_state.lp_property  = property_area
+
+        # ---- Inline validation ----
+        validations = render_validation(
+            st.session_state.lp_credit,
+            st.session_state.lp_income,
+            st.session_state.lp_co_income,
+            st.session_state.lp_loan,
+            st.session_state.lp_duration
+        )
+        for msg, level in validations:
+            if level == "error":
+                st.error(msg)
+            else:
+                st.warning(msg)
+
         st.markdown("</div>", unsafe_allow_html=True)
-        
-        predict_btn = st.button("Predict Loan Approval", use_container_width=True)
-    
+
+        col_btn1, col_btn2 = st.columns([3, 1])
+        with col_btn1:
+            predict_btn = st.button("Predict Loan Approval", use_container_width=True)
+        with col_btn2:
+            reset_btn = st.button("Reset", use_container_width=True)
+
+        if reset_btn:
+            for key in ['lp_income','lp_co_income','lp_loan','lp_duration',
+                        'lp_credit','lp_employment','lp_education','lp_property']:
+                del st.session_state[key]
+            st.rerun()
+
+    # ---- Right column: live preview + key factors ----
     with col2:
-        st.markdown("### Quick Insights")
-        
-        if predict_btn:
-            total_income = applicant_income + co_income
-            debt_ratio = (loan_amount / (total_income * loan_duration)) * 100
-            
-            insights = []
-            if credit_score >= 750:
-                insights.append("Excellent credit score")
-            elif credit_score < 600:
-                insights.append("Credit score needs improvement")
-            
-            if total_income > 5000:
-                insights.append("Strong income level")
-            
-            if employment in ["Salaried", "Business Owner"]:
-                insights.append("Stable employment")
-            
-            for insight in insights:
-                st.info(insight)
-        
-        st.markdown("### Key Factors")
-        factors = [
-            ("Credit Score", 35),
-            ("Income Stability", 30),
-            ("Employment Type", 20),
-            ("Loan Amount", 15)
-        ]
-        
-        for factor, weight in factors:
-            st.write(f"**{factor}:** {weight}%")
-            st.progress(weight / 100)
-    
+
+        # Live score preview — always visible
+        live_data = {
+            'credit_score'     : st.session_state.lp_credit,
+            'applicant_income' : st.session_state.lp_income,
+            'co_income'        : st.session_state.lp_co_income,
+            'loan_amount'      : st.session_state.lp_loan,
+            'loan_duration'    : st.session_state.lp_duration,
+            'employment'       : st.session_state.lp_employment,
+            'education'        : st.session_state.lp_education,
+            'property_area'    : st.session_state.lp_property,
+        }
+        live_result = calculate_loan_score(live_data)
+        render_live_score(
+            live_result['probability'],
+            st.session_state.lp_income + st.session_state.lp_co_income,
+            st.session_state.lp_loan,
+            st.session_state.lp_duration
+        )
+
+        # Key factors weight panel
+        st.markdown("""
+        <div style="background:#ffffff; border:1px solid #e5e7eb; border-radius:12px;
+                    padding:16px 18px; margin-top:4px;">
+            <p style="font-size:11px; font-weight:600; text-transform:uppercase;
+                      letter-spacing:0.6px; color:#9ca3af; margin:0 0 12px 0;
+                      font-family:Inter,sans-serif;">Factor Weights</p>
+        """, unsafe_allow_html=True)
+        weights = [("Credit Score", 35), ("Income Stability", 30),
+                   ("Employment", 20), ("Loan Amount", 15)]
+        for factor, weight in weights:
+            st.markdown(f"""
+            <div style="margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <span style="font-size:13px; color:#374151; font-family:Inter,sans-serif;">{factor}</span>
+                    <span style="font-size:12px; font-weight:600; color:#2563eb; font-family:Inter,sans-serif;">{weight}%</span>
+                </div>
+                <div style="background:#f0f4f8; border-radius:100px; height:5px; overflow:hidden;">
+                    <div style="width:{weight}%; background:#2563eb; height:100%; border-radius:100px;"></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # ---- Prediction result ----
     if predict_btn:
         st.session_state.prediction_count += 1
-        
+
         applicant_data = {
-            'name': name,
-            'credit_score': credit_score,
+            'name'            : name,
+            'credit_score'    : credit_score,
             'applicant_income': applicant_income,
-            'co_income': co_income,
-            'loan_amount': loan_amount,
-            'loan_duration': loan_duration,
-            'employment': employment,
-            'education': education,
-            'property_area': property_area,
-            'dependents': dependents,
-            'marital': marital,
-            'gender': gender
+            'co_income'       : co_income,
+            'loan_amount'     : loan_amount,
+            'loan_duration'   : loan_duration,
+            'employment'      : employment,
+            'education'       : education,
+            'property_area'   : property_area,
+            'dependents'      : dependents,
+            'marital'         : marital,
+            'gender'          : gender
         }
-        
-        # Show progress
+
+        # Step-based animated progress
+        steps = [
+            (25,  "Verifying applicant identity..."),
+            (50,  "Evaluating credit history..."),
+            (75,  "Analysing income & liabilities..."),
+            (90,  "Running decision model..."),
+            (100, "Finalising decision..."),
+        ]
         progress_bar = st.progress(0)
-        status_text = st.empty()
-        
-        for i in range(100):
-            progress_bar.progress(i + 1)
-            if i < 30:
-                status_text.text("Analyzing credit history...")
-            elif i < 60:
-                status_text.text("Calculating financial ratios...")
-            elif i < 80:
-                status_text.text("Running prediction models...")
-            else:
-                status_text.text("Generating final report...")
-            time.sleep(0.02)
-        
-        status_text.text("Analysis complete!")
-        
+        status_text  = st.empty()
+        for target, message in steps:
+            for v in range(progress_bar._value if hasattr(progress_bar, '_value') else 0, target):
+                progress_bar.progress(v + 1)
+                time.sleep(0.012)
+            status_text.markdown(
+                f"<p style='font-size:13px; color:#6b7280; font-family:Inter,sans-serif;"
+                f" margin:4px 0;'>{message}</p>",
+                unsafe_allow_html=True
+            )
+            time.sleep(0.15)
+        progress_bar.empty()
+        status_text.empty()
+
         result = calculate_loan_score(applicant_data)
         st.session_state.current_prediction = result
-        
+
         history_entry = {
-            'timestamp': datetime.now(),
-            'name': name,
-            'amount': loan_amount,
+            'timestamp' : datetime.now(),
+            'name'      : name,
+            'amount'    : loan_amount,
             'probability': result['probability'],
-            'approved': result['approved']
+            'approved'  : result['approved']
         }
         st.session_state.loan_history.append(history_entry)
-        
+
         st.markdown("---")
-        
-        if result['approved']:
-            st.markdown(f'''
-            <div class="approved-card fade-in">
-                <h2>LOAN APPROVED</h2>
-                <p style="font-size: 24px;">
-                    Approval Probability: <b>{result["probability"]:.1f}%</b>
-                </p>
-                <p>Recommended Amount: <b>${loan_amount:,.0f}</b></p>
-                <p>Estimated Interest Rate: <b>7.5% - 9.5%</b></p>
+
+        # Result card
+        label, color, bg, border = get_risk_level(result['probability'])
+        verdict       = "LOAN APPROVED" if result['approved'] else "LOAN NOT APPROVED"
+        verdict_color = "#16a34a"       if result['approved'] else "#dc2626"
+        conf_pct      = int(result['probability'])
+        emi_est       = (loan_amount / loan_duration) * 1.08
+
+        st.markdown(f"""
+        <div class="fade-in" style="background:{bg}; border:1.5px solid {border};
+             border-left:4px solid {verdict_color}; border-radius:12px;
+             padding:28px 24px; margin:20px 0;">
+            <div style="display:flex; align-items:center; justify-content:space-between;
+                        flex-wrap:wrap; gap:12px; margin-bottom:18px;">
+                <h2 style="margin:0; font-size:22px; font-weight:700;
+                           color:{verdict_color}; font-family:Inter,sans-serif;">{verdict}</h2>
+                <span style="font-size:13px; font-weight:600; color:{color};
+                             background:white; border:1px solid {border};
+                             border-radius:20px; padding:5px 14px;
+                             font-family:Inter,sans-serif;">{label}</span>
             </div>
-            ''', unsafe_allow_html=True)
-        else:
-            st.markdown(f'''
-            <div class="rejected-card fade-in">
-                <h2>LOAN NOT APPROVED</h2>
-                <p style="font-size: 24px;">
-                    Approval Probability: <b>{result["probability"]:.1f}%</b>
-                </p>
-                <p>Minimum Required: <b>65%</b></p>
+            <p style="font-size:13px; font-weight:600; text-transform:uppercase;
+                      letter-spacing:0.5px; color:#9ca3af; margin:0 0 6px 0;
+                      font-family:Inter,sans-serif;">Approval Confidence</p>
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom:16px;">
+                <div style="flex:1; background:#e5e7eb; border-radius:100px;
+                            height:10px; overflow:hidden;">
+                    <div style="width:{conf_pct}%; background:{verdict_color};
+                                height:100%; border-radius:100px;"></div>
+                </div>
+                <span style="font-size:24px; font-weight:700; color:{verdict_color};
+                             font-family:Inter,sans-serif; min-width:56px;">{result['probability']:.1f}%</span>
             </div>
-            ''', unsafe_allow_html=True)
-        
-        # Detailed Analysis
-        st.markdown("### Score Breakdown")
-        col_a, col_b = st.columns(2)
-        
-        with col_a:
-            for factor, score, max_score in result['factors'][:3]:
-                st.write(f"**{factor}:** {score:.0f}/{max_score}")
-                st.progress(score / max_score)
-        
-        with col_b:
-            for factor, score, max_score in result['factors'][3:]:
-                st.write(f"**{factor}:** {score:.0f}/{max_score}")
-                st.progress(score / max_score)
-        
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:4px;">
+                <div style="background:white; border-radius:8px; padding:12px 14px;
+                            border:1px solid {border};">
+                    <p style="font-size:11px; color:#9ca3af; margin:0 0 4px 0;
+                               font-family:Inter,sans-serif; text-transform:uppercase;
+                               letter-spacing:0.5px;">Loan Amount</p>
+                    <p style="font-size:16px; font-weight:700; color:#1f2937;
+                               margin:0; font-family:Inter,sans-serif;">${loan_amount:,.0f}</p>
+                </div>
+                <div style="background:white; border-radius:8px; padding:12px 14px;
+                            border:1px solid {border};">
+                    <p style="font-size:11px; color:#9ca3af; margin:0 0 4px 0;
+                               font-family:Inter,sans-serif; text-transform:uppercase;
+                               letter-spacing:0.5px;">Est. EMI / mo</p>
+                    <p style="font-size:16px; font-weight:700; color:#2563eb;
+                               margin:0; font-family:Inter,sans-serif;">${emi_est:,.0f}</p>
+                </div>
+                <div style="background:white; border-radius:8px; padding:12px 14px;
+                            border:1px solid {border};">
+                    <p style="font-size:11px; color:#9ca3af; margin:0 0 4px 0;
+                               font-family:Inter,sans-serif; text-transform:uppercase;
+                               letter-spacing:0.5px;">Interest Rate</p>
+                    <p style="font-size:16px; font-weight:700; color:#1f2937;
+                               margin:0; font-family:Inter,sans-serif;">7.5–9.5%</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Score breakdown
+        render_score_breakdown(result['factors'])
+
         # Recommendations
-        st.markdown("### Recommendations")
+        st.markdown("""
+        <p style="font-size:15px; font-weight:600; color:#1f2937;
+                  font-family:Inter,sans-serif; margin:20px 0 10px 0;">Recommendations</p>
+        """, unsafe_allow_html=True)
         if not result['approved']:
             if credit_score < 650:
-                st.warning("• Improve your credit score by paying bills on time")
+                st.warning("Improve your credit score by paying bills on time and reducing outstanding debt.")
             if (applicant_income + co_income) < 3000:
-                st.warning("• Consider adding a co-applicant with stable income")
-            st.info("You can reapply in 6 months after improving these factors")
+                st.warning("Consider adding a co-applicant with a stable income to strengthen the application.")
+            st.info("You may reapply in 6 months after addressing the above factors.")
+        else:
+            st.success("Your application looks strong. Proceed to the nearest branch to complete documentation.")
 
 # -------------------- DASHBOARD --------------------
 elif page == "Dashboard":
     st.markdown('<h1 class="main-title">Analytics Dashboard</h1>', unsafe_allow_html=True)
-    
+
+    # Last prediction highlight
+    if st.session_state.current_prediction:
+        lp = st.session_state.current_prediction
+        lp_label, lp_color, lp_bg, lp_border = get_risk_level(lp['probability'])
+        lp_verdict = "Approved" if lp['approved'] else "Not Approved"
+        st.markdown(f"""
+        <div style="background:{lp_bg}; border:1.5px solid {lp_border};
+             border-left:4px solid {lp_color}; border-radius:12px;
+             padding:16px 20px; margin-bottom:24px;
+             display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+            <div>
+                <p style="font-size:11px; font-weight:600; text-transform:uppercase;
+                           letter-spacing:0.6px; color:#9ca3af; margin:0 0 4px 0;
+                           font-family:Inter,sans-serif;">Last Prediction</p>
+                <p style="font-size:16px; font-weight:700; color:{lp_color};
+                           margin:0; font-family:Inter,sans-serif;">{lp_verdict} — {lp['probability']:.1f}% confidence</p>
+            </div>
+            <span style="font-size:13px; font-weight:600; color:{lp_color};
+                         background:white; border:1px solid {lp_border};
+                         border-radius:20px; padding:5px 14px;
+                         font-family:Inter,sans-serif;">{lp_label}</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Metrics row
     col1, col2, col3, col4 = st.columns(4)
-    
+
+    total_preds = st.session_state.prediction_count
+    if st.session_state.loan_history:
+        n_approved = len([h for h in st.session_state.loan_history if h['approved']])
+        rate        = (n_approved / len(st.session_state.loan_history)) * 100
+        total_val   = sum(h['amount'] for h in st.session_state.loan_history)
+        avg_val     = total_val / len(st.session_state.loan_history)
+    else:
+        n_approved = 0; rate = 0; total_val = 0; avg_val = 0
+
     with col1:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("Total Predictions", st.session_state.prediction_count)
+        st.metric("Total Predictions", total_preds)
         st.markdown('</div>', unsafe_allow_html=True)
-    
     with col2:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        if st.session_state.loan_history:
-            approved = len([h for h in st.session_state.loan_history if h['approved']])
-            rate = (approved / len(st.session_state.loan_history)) * 100
-            st.metric("Approval Rate", f"{rate:.1f}%")
-        else:
-            st.metric("Approval Rate", "0%")
+        st.metric("Approval Rate", f"{rate:.1f}%")
         st.markdown('</div>', unsafe_allow_html=True)
-    
     with col3:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        if st.session_state.loan_history:
-            total = sum(h['amount'] for h in st.session_state.loan_history)
-            st.metric("Total Loan Value", f"${total:,.0f}")
-        else:
-            st.metric("Total Loan Value", "$0")
+        st.metric("Total Loan Value", f"${total_val:,.0f}")
         st.markdown('</div>', unsafe_allow_html=True)
-    
     with col4:
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("Avg. Loan Amount", "$50,000")
+        st.metric("Avg. Loan Amount", f"${avg_val:,.0f}" if avg_val else "$0")
         st.markdown('</div>', unsafe_allow_html=True)
-    
+
     st.markdown("---")
-    
-    # Recent Applications
+
+    if st.session_state.loan_history:
+        chart_col1, chart_col2 = st.columns(2)
+
+        with chart_col1:
+            st.markdown("**Approval vs Rejection**")
+            n_rejected = len(st.session_state.loan_history) - n_approved
+            chart_df = pd.DataFrame({
+                "Status": ["Approved", "Rejected"],
+                "Count" : [n_approved, n_rejected]
+            })
+            st.bar_chart(chart_df.set_index("Status"), color="#2563eb", height=220)
+
+        with chart_col2:
+            st.markdown("**Loan Amount Distribution**")
+            amounts_df = pd.DataFrame({
+                "Loan Amount ($)": [h['amount'] for h in st.session_state.loan_history]
+            })
+            st.bar_chart(amounts_df, color="#2563eb", height=220)
+
+        st.markdown("---")
+
+    # Recent applications
     st.markdown("### Recent Applications")
     if st.session_state.loan_history:
-        # Get last 10 applications
         recent = st.session_state.loan_history[-10:][::-1]
-        
         for app in recent:
             status = "Approved" if app['approved'] else "Rejected"
-            color = "green" if app['approved'] else "red"
-            
-            st.write(f"""
-            **{app['name']}** | ${app['amount']:,.0f} | {app['probability']:.1f}% | 
-            <span style='color:{color}'>{status}</span> | 
-            {app['timestamp'].strftime('%Y-%m-%d %H:%M')}
+            s_color = "#16a34a" if app['approved'] else "#dc2626"
+            s_bg    = "#f0fdf4" if app['approved'] else "#fef2f2"
+            s_border= "#bbf7d0" if app['approved'] else "#fecaca"
+            st.markdown(f"""
+            <div style="display:flex; align-items:center; justify-content:space-between;
+                        padding:12px 16px; border:1px solid #e5e7eb; border-radius:10px;
+                        margin-bottom:8px; background:#ffffff; flex-wrap:wrap; gap:8px;">
+                <span style="font-size:14px; font-weight:600; color:#1f2937;
+                             font-family:Inter,sans-serif;">{app['name'] or 'N/A'}</span>
+                <span style="font-size:13px; color:#6b7280;
+                             font-family:Inter,sans-serif;">${app['amount']:,.0f}</span>
+                <span style="font-size:13px; color:#6b7280;
+                             font-family:Inter,sans-serif;">{app['probability']:.1f}%</span>
+                <span style="font-size:12px; font-weight:600; color:{s_color};
+                             background:{s_bg}; border:1px solid {s_border};
+                             border-radius:20px; padding:3px 10px;
+                             font-family:Inter,sans-serif;">{status}</span>
+                <span style="font-size:12px; color:#9ca3af;
+                             font-family:Inter,sans-serif;">{app['timestamp'].strftime('%d %b %Y %H:%M')}</span>
+            </div>
             """, unsafe_allow_html=True)
-            st.progress(app['probability'] / 100)
     else:
         st.info("No applications yet. Make your first prediction!")
 
 # -------------------- HISTORY --------------------
 elif page == "History":
     st.markdown('<h1 class="main-title">Application History</h1>', unsafe_allow_html=True)
-    
+
     if st.session_state.loan_history:
-        # Create DataFrame for better display
         history_data = []
         for entry in st.session_state.loan_history:
             history_data.append({
-                'Date': entry['timestamp'].strftime('%Y-%m-%d %H:%M'),
-                'Applicant': entry['name'],
-                'Amount': f"${entry['amount']:,.0f}",
+                'Date'       : entry['timestamp'].strftime('%Y-%m-%d %H:%M'),
+                'Applicant'  : entry['name'],
+                'Amount'     : f"${entry['amount']:,.0f}",
                 'Probability': f"{entry['probability']:.1f}%",
-                'Status': 'Approved' if entry['approved'] else 'Rejected'
+                'Status'     : 'Approved' if entry['approved'] else 'Rejected'
             })
-        
+
         df = pd.DataFrame(history_data)
         st.dataframe(df, use_container_width=True, hide_index=True)
-        
-        # Export button
+
         csv = df.to_csv(index=False)
         st.download_button(
             label="Download as CSV",
@@ -1242,47 +1513,47 @@ elif page == "History":
             file_name="loan_history.csv",
             mime="text/csv"
         )
-        
-        # Statistics
+
         st.markdown("### Statistics")
-        approved = len([h for h in st.session_state.loan_history if h['approved']])
-        total = len(st.session_state.loan_history)
-        avg_prob = np.mean([h['probability'] for h in st.session_state.loan_history])
-        
+        approved_n = len([h for h in st.session_state.loan_history if h['approved']])
+        total_n    = len(st.session_state.loan_history)
+        avg_prob   = np.mean([h['probability'] for h in st.session_state.loan_history])
+
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Total Applications", total)
+            st.metric("Total Applications", total_n)
         with col2:
-            st.metric("Approved", approved)
+            st.metric("Approved", approved_n)
         with col3:
             st.metric("Avg. Probability", f"{avg_prob:.1f}%")
     else:
-        st.info("No history available yet. Make your first prediction in the Loan Prediction page!")
+        st.info("No history available yet. Make your first prediction!")
 
 # -------------------- SETTINGS --------------------
 elif page == "Settings":
     st.markdown('<h1 class="main-title">Settings</h1>', unsafe_allow_html=True)
-    
+
     with st.expander("Model Settings"):
         threshold = st.slider("Approval Threshold (%)", 50, 80, 65)
-        st.info(f"Applications with probability ≥ {threshold}% will be approved")
-    
+        st.info(f"Applications with probability >= {threshold}% will be approved")
+
     with st.expander("Notification Settings"):
         email = st.checkbox("Email notifications", True)
-        sms = st.checkbox("SMS notifications", False)
-    
+        sms   = st.checkbox("SMS notifications", False)
+
     with st.expander("System Information"):
         st.write("**Version:** 2.0.0")
         st.write("**Last Updated:** 2024-01-15")
         st.write("**Model Type:** Random Forest Ensemble")
         st.write("**Accuracy:** 89.2%")
-    
+
     if st.button("Save Settings", use_container_width=True):
         st.success("Settings saved successfully!")
 
 # -------------------- FOOTER --------------------
 st.markdown("""
-<div style='text-align: center; color: #9ca3af; padding: 30px 0; margin-top: 50px; border-top: 1px solid #e5e7eb; font-family: Inter, sans-serif; font-size: 13px;'>
+<div style='text-align: center; color: #9ca3af; padding: 30px 0; margin-top: 50px;
+     border-top: 1px solid #e5e7eb; font-family: Inter, sans-serif; font-size: 13px;'>
     <p>FinBank AI &nbsp;·&nbsp; Secure &nbsp;·&nbsp; Intelligent &nbsp;·&nbsp; Transparent</p>
     <p style='font-size: 11px; color: #d1d5db; margin-top: 4px;'>© 2024 FinBank AI Technologies. All rights reserved.</p>
 </div>
