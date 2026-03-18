@@ -326,18 +326,32 @@ label {
 }
 
 /* ============================================================
-   SLIDER — clean layout, no overlap
+   SLIDER — value bubble above track, no overlap
    ============================================================ */
 
-/* Container: give slider breathing room */
+/* Outer widget wrapper — tall enough so the bubble above has room */
 [data-testid="stSlider"] {
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
+    padding-top: 20px !important;   /* space for the value bubble */
+    padding-bottom: 10px !important;
     margin-bottom: 18px !important;
+    overflow: visible !important;
 }
 
-/* The value bubble above the thumb — keep it above, not overlapping */
-[data-testid="stSlider"] [data-testid="stThumbValue"] {
+/* The inner baseweb slider wrapper — needs overflow visible */
+[data-testid="stSlider"] [data-baseweb="slider"] {
+    overflow: visible !important;
+    margin-top: 0 !important;
+}
+
+/* Value tooltip bubble — sits ABOVE the track */
+[data-testid="stSlider"] [data-testid="stThumbValue"],
+[data-testid="stSlider"] div[class*="StyledThumbValue"],
+[data-testid="stSlider"] div[class*="thumbValue"],
+[data-testid="stSlider"] [data-baseweb="tooltip"],
+[data-testid="stSlider"] [role="tooltip"] {
+    position: absolute !important;
+    top: -32px !important;
+    transform: translateX(-50%) !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 12px !important;
     font-weight: 600 !important;
@@ -345,51 +359,63 @@ label {
     background: var(--primary-light) !important;
     border: 1px solid var(--primary-soft) !important;
     border-radius: 5px !important;
-    padding: 2px 7px !important;
+    padding: 2px 8px !important;
     white-space: nowrap !important;
-    top: -28px !important;
-    transform: translateX(-50%) !important;
+    line-height: 1.6 !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
 }
 
-/* Track fill */
-[data-testid="stSlider"] div[data-baseweb="slider"] div:first-child {
-    background: var(--primary) !important;
-    height: 4px !important;
-    border-radius: 100px !important;
+/* Track container — centered vertically with no clipping */
+[data-testid="stSlider"] [data-baseweb="slider"] > div:first-child {
+    overflow: visible !important;
+    position: relative !important;
 }
 
-/* Track background */
-[data-testid="stSlider"] [data-baseweb="slider"] > div {
-    height: 4px !important;
+/* Track background rail */
+[data-testid="stSlider"] [data-baseweb="slider"] [data-testid="stSliderTrack"],
+[data-testid="stSlider"] [data-baseweb="slider"] > div > div:first-child {
+    height: 5px !important;
     background: var(--bg-tertiary) !important;
     border-radius: 100px !important;
+    overflow: visible !important;
 }
 
-/* Thumb */
+/* Filled portion of track */
+[data-testid="stSlider"] [data-baseweb="slider"] > div > div:first-child > div:first-child {
+    height: 5px !important;
+    background: var(--primary) !important;
+    border-radius: 100px !important;
+}
+
+/* Thumb circle */
 [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
     width: 18px !important;
     height: 18px !important;
     background: var(--primary) !important;
-    border: 2px solid #ffffff !important;
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.18), var(--shadow-sm) !important;
+    border: 2.5px solid #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.2), 0 1px 4px rgba(0,0,0,0.12) !important;
     border-radius: 50% !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     cursor: grab !important;
+    z-index: 5 !important;
+    position: absolute !important;
 }
 
 [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]:active {
     cursor: grabbing !important;
-    box-shadow: 0 0 0 5px rgba(37,99,235,0.2) !important;
+    box-shadow: 0 0 0 5px rgba(37,99,235,0.22), 0 1px 4px rgba(0,0,0,0.12) !important;
 }
 
-/* Min/max tick labels */
+/* Min/max range labels below track */
 [data-testid="stSlider"] [data-testid="stTickBarMin"],
 [data-testid="stSlider"] [data-testid="stTickBarMax"] {
     font-size: 11px !important;
-    color: var(--text-muted) !important;
     font-family: 'Inter', sans-serif !important;
-    margin-top: 6px !important;
+    color: var(--text-muted) !important;
+    margin-top: 8px !important;
+    line-height: 1 !important;
 }
 
 /* ============================================================
