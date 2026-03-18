@@ -26,17 +26,37 @@ st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
+/*
+  COLOR PALETTE
+  --dark-green  : #25671E  (deep forest — backgrounds, sidebar, dark surfaces)
+  --bright-green: #48A111  (vivid lime — primary accent, buttons, highlights)
+  --gold        : #F2B50B  (warm amber — secondary accent, titles, stars)
+  --cream       : #F7F0F0  (soft white — text, light surfaces)
+*/
+
+:root {
+    --dark-green  : #25671E;
+    --bright-green: #48A111;
+    --gold        : #F2B50B;
+    --cream       : #F7F0F0;
+    --bg-base     : #0f1f0d;
+    --bg-surface  : rgba(37, 103, 30, 0.35);
+    --bg-glass    : rgba(15, 31, 13, 0.75);
+    --border-dim  : rgba(72, 161, 17, 0.18);
+    --border-gold : rgba(242, 181, 11, 0.25);
+    --text-muted  : rgba(247, 240, 240, 0.5);
+    --text-dim    : rgba(247, 240, 240, 0.35);
+}
+
 /* ============================================================
    GLOBAL RESET & BASE
    ============================================================ */
-*, *::before, *::after {
-    box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
 html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     font-family: 'DM Sans', sans-serif !important;
-    background: #080d1a !important;
-    color: #e8edf5 !important;
+    background: var(--bg-base) !important;
+    color: var(--cream) !important;
 }
 
 /* Animated mesh background */
@@ -45,40 +65,39 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     position: fixed;
     inset: 0;
     background:
-        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(13,71,161,0.18) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(76,175,80,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 60% at 60% 10%, rgba(13,71,161,0.08) 0%, transparent 50%);
+        radial-gradient(ellipse 80% 50% at 15% 20%, rgba(37,103,30,0.45) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 45% at 85% 80%, rgba(72,161,17,0.20) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 55% 5%,  rgba(242,181,11,0.06) 0%, transparent 55%);
     pointer-events: none;
     z-index: 0;
-    animation: meshShift 12s ease-in-out infinite alternate;
+    animation: meshShift 14s ease-in-out infinite alternate;
 }
 
 @keyframes meshShift {
-    0%   { opacity: 1; transform: scale(1) translateY(0px); }
-    100% { opacity: 0.85; transform: scale(1.04) translateY(-10px); }
+    0%   { opacity: 1;    transform: scale(1)    translateY(0px); }
+    100% { opacity: 0.82; transform: scale(1.04) translateY(-12px); }
 }
 
-/* Particle dots overlay */
+/* Particle dot grid overlay */
 [data-testid="stAppViewContainer"]::after {
     content: '';
     position: fixed;
     inset: 0;
     background-image:
-        radial-gradient(circle, rgba(76,175,80,0.08) 1px, transparent 1px),
-        radial-gradient(circle, rgba(13,71,161,0.06) 1px, transparent 1px);
-    background-size: 60px 60px, 90px 90px;
-    background-position: 0 0, 30px 30px;
+        radial-gradient(circle, rgba(72,161,17,0.07) 1px, transparent 1px),
+        radial-gradient(circle, rgba(242,181,11,0.04) 1px, transparent 1px);
+    background-size: 58px 58px, 86px 86px;
+    background-position: 0 0, 29px 29px;
     pointer-events: none;
     z-index: 0;
-    animation: particleDrift 20s linear infinite;
+    animation: particleDrift 22s linear infinite;
 }
 
 @keyframes particleDrift {
-    from { background-position: 0 0, 30px 30px; }
-    to   { background-position: 60px 60px, 90px 90px; }
+    from { background-position: 0 0, 29px 29px; }
+    to   { background-position: 58px 58px, 86px 86px; }
 }
 
-/* Ensure all content is above backgrounds */
 [data-testid="stMainBlockContainer"] {
     position: relative;
     z-index: 1;
@@ -89,7 +108,11 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
    ============================================================ */
 .main-title {
     font-family: 'Syne', sans-serif !important;
-    background: linear-gradient(110deg, #4fc3f7 0%, #4caf50 40%, #0d47a1 80%, #4fc3f7 100%);
+    background: linear-gradient(110deg,
+        var(--gold) 0%,
+        var(--cream) 35%,
+        var(--bright-green) 65%,
+        var(--gold) 100%);
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -100,11 +123,11 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     letter-spacing: -1.5px;
     line-height: 1.1;
     margin-bottom: 6px;
-    animation: titleShimmer 4s linear infinite, slideDown 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: titleShimmer 4s linear infinite, slideDown 0.7s cubic-bezier(0.16,1,0.3,1) both;
 }
 
 @keyframes titleShimmer {
-    0%   { background-position: 0% center; }
+    0%   { background-position: 0%   center; }
     100% { background-position: 200% center; }
 }
 
@@ -114,18 +137,18 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 }
 
 /* ============================================================
-   SIDEBAR — GLASS PANEL
+   SIDEBAR — DARK GLASS
    ============================================================ */
 [data-testid="stSidebar"] {
-    background: rgba(10, 16, 35, 0.85) !important;
-    backdrop-filter: blur(24px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-    border-right: 1px solid rgba(76, 175, 80, 0.12) !important;
-    box-shadow: 4px 0 40px rgba(0,0,0,0.4) !important;
+    background: rgba(10, 22, 8, 0.92) !important;
+    backdrop-filter: blur(28px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
+    border-right: 1px solid var(--border-dim) !important;
+    box-shadow: 4px 0 40px rgba(0,0,0,0.55) !important;
 }
 
 [data-testid="stSidebar"] * {
-    color: #c8d8ea !important;
+    color: var(--cream) !important;
     font-family: 'DM Sans', sans-serif !important;
 }
 
@@ -133,14 +156,13 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     font-family: 'Syne', sans-serif !important;
     font-size: 22px !important;
     font-weight: 700 !important;
-    background: linear-gradient(90deg, #4fc3f7, #4caf50);
+    background: linear-gradient(90deg, var(--gold), var(--bright-green));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     letter-spacing: -0.5px;
 }
 
-/* Sidebar nav radio items */
 [data-testid="stSidebar"] [data-testid="stRadio"] label {
     display: block;
     padding: 10px 16px !important;
@@ -154,15 +176,14 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 }
 
 [data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
-    background: rgba(76, 175, 80, 0.1) !important;
-    border-color: rgba(76, 175, 80, 0.2) !important;
+    background: rgba(72,161,17,0.12) !important;
+    border-color: rgba(72,161,17,0.25) !important;
     transform: translateX(4px) !important;
 }
 
-/* Sidebar metric cards */
 [data-testid="stSidebar"] [data-testid="stMetric"] {
-    background: rgba(255,255,255,0.04) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
+    background: rgba(72,161,17,0.07) !important;
+    border: 1px solid rgba(72,161,17,0.15) !important;
     border-radius: 12px !important;
     padding: 12px 16px !important;
     margin: 6px 0 !important;
@@ -170,26 +191,26 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 }
 
 [data-testid="stSidebar"] [data-testid="stMetric"]:hover {
-    background: rgba(76, 175, 80, 0.08) !important;
-    border-color: rgba(76, 175, 80, 0.2) !important;
+    background: rgba(72,161,17,0.14) !important;
+    border-color: rgba(72,161,17,0.3) !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stMetricLabel"] {
     font-size: 11px !important;
     text-transform: uppercase !important;
     letter-spacing: 1px !important;
-    color: #7a9bb5 !important;
+    color: var(--text-muted) !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stMetricValue"] {
     font-family: 'Syne', sans-serif !important;
     font-size: 24px !important;
     font-weight: 700 !important;
-    color: #e8edf5 !important;
+    color: var(--gold) !important;
 }
 
 /* ============================================================
-   BUTTONS — PREMIUM GRADIENT
+   BUTTONS — GOLD → GREEN GRADIENT
    ============================================================ */
 .stButton > button {
     font-family: 'DM Sans', sans-serif !important;
@@ -199,21 +220,25 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     padding: 14px 28px !important;
     border-radius: 14px !important;
     border: none !important;
-    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 40%, #2e7d32 80%, #388e3c 100%) !important;
+    background: linear-gradient(135deg,
+        var(--dark-green) 0%,
+        var(--bright-green) 45%,
+        #6abf1a 75%,
+        var(--gold) 100%) !important;
     background-size: 200% 200% !important;
-    color: #fff !important;
+    color: var(--cream) !important;
     position: relative !important;
     overflow: hidden !important;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition: all 0.3s cubic-bezier(0.16,1,0.3,1) !important;
     box-shadow:
-        0 4px 15px rgba(13, 71, 161, 0.35),
-        0 1px 3px rgba(0,0,0,0.3),
-        inset 0 1px 0 rgba(255,255,255,0.1) !important;
+        0 4px 18px rgba(72,161,17,0.4),
+        0 1px 4px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(247,240,240,0.12) !important;
     animation: gradientShift 4s ease infinite !important;
 }
 
 @keyframes gradientShift {
-    0%, 100% { background-position: 0% 50%; }
+    0%, 100% { background-position: 0%   50%; }
     50%       { background-position: 100% 50%; }
 }
 
@@ -223,7 +248,7 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     top: 0; left: -100%;
     width: 60%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    background: linear-gradient(90deg, transparent, rgba(247,240,240,0.18), transparent);
     transition: left 0.5s ease;
     transform: skewX(-20deg);
 }
@@ -231,18 +256,16 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 .stButton > button:hover {
     transform: translateY(-2px) scale(1.02) !important;
     box-shadow:
-        0 8px 30px rgba(13, 71, 161, 0.5),
-        0 4px 12px rgba(76, 175, 80, 0.3),
-        inset 0 1px 0 rgba(255,255,255,0.15) !important;
+        0 8px 28px rgba(72,161,17,0.55),
+        0 4px 12px rgba(242,181,11,0.25),
+        inset 0 1px 0 rgba(247,240,240,0.18) !important;
 }
 
-.stButton > button:hover::before {
-    left: 150%;
-}
+.stButton > button:hover::before { left: 150%; }
 
 .stButton > button:active {
     transform: translateY(1px) scale(0.98) !important;
-    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(72,161,17,0.3) !important;
 }
 
 /* ============================================================
@@ -250,30 +273,30 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
    ============================================================ */
 [data-testid="stTextInput"] input,
 [data-testid="stNumberInput"] input {
-    background: rgba(255,255,255,0.04) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
+    background: rgba(37,103,30,0.12) !important;
+    border: 1px solid rgba(72,161,17,0.2) !important;
     border-radius: 12px !important;
-    color: #e8edf5 !important;
+    color: var(--cream) !important;
     font-family: 'DM Sans', sans-serif !important;
     font-size: 14px !important;
     padding: 12px 16px !important;
     transition: all 0.3s ease !important;
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.2) !important;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.25) !important;
 }
 
 [data-testid="stTextInput"] input:focus,
 [data-testid="stNumberInput"] input:focus {
-    border-color: rgba(76, 175, 80, 0.5) !important;
+    border-color: rgba(72,161,17,0.55) !important;
     box-shadow:
         inset 0 2px 6px rgba(0,0,0,0.2),
-        0 0 0 3px rgba(76, 175, 80, 0.12),
-        0 0 20px rgba(76, 175, 80, 0.08) !important;
-    background: rgba(255,255,255,0.06) !important;
+        0 0 0 3px rgba(72,161,17,0.13),
+        0 0 20px rgba(242,181,11,0.06) !important;
+    background: rgba(37,103,30,0.18) !important;
 }
 
 [data-testid="stTextInput"] input::placeholder,
 [data-testid="stNumberInput"] input::placeholder {
-    color: rgba(200, 216, 234, 0.35) !important;
+    color: rgba(247,240,240,0.3) !important;
     font-style: italic !important;
 }
 
@@ -281,37 +304,37 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
    SELECT BOXES
    ============================================================ */
 [data-testid="stSelectbox"] > div > div {
-    background: rgba(255,255,255,0.04) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
+    background: rgba(37,103,30,0.12) !important;
+    border: 1px solid rgba(72,161,17,0.2) !important;
     border-radius: 12px !important;
-    color: #e8edf5 !important;
+    color: var(--cream) !important;
     font-family: 'DM Sans', sans-serif !important;
     transition: all 0.3s ease !important;
 }
 
 [data-testid="stSelectbox"] > div > div:hover {
-    border-color: rgba(76, 175, 80, 0.4) !important;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.08) !important;
+    border-color: rgba(72,161,17,0.45) !important;
+    box-shadow: 0 0 0 3px rgba(72,161,17,0.09) !important;
 }
 
 /* ============================================================
    SLIDER
    ============================================================ */
 [data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
-    background: linear-gradient(135deg, #0d47a1, #4caf50) !important;
-    box-shadow: 0 0 12px rgba(76, 175, 80, 0.5) !important;
+    background: linear-gradient(135deg, var(--dark-green), var(--gold)) !important;
+    box-shadow: 0 0 12px rgba(242,181,11,0.5) !important;
 }
 
 [data-testid="stSlider"] div[data-baseweb="slider"] div:first-child {
-    background: linear-gradient(90deg, #0d47a1, #4caf50) !important;
+    background: linear-gradient(90deg, var(--bright-green), var(--gold)) !important;
 }
 
 /* ============================================================
    TABS — PILL STYLE
    ============================================================ */
 [data-testid="stTabs"] [data-baseweb="tab-list"] {
-    background: rgba(255,255,255,0.03) !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
+    background: rgba(37,103,30,0.15) !important;
+    border: 1px solid rgba(72,161,17,0.15) !important;
     border-radius: 16px !important;
     padding: 4px !important;
     gap: 4px !important;
@@ -321,7 +344,7 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     font-family: 'DM Sans', sans-serif !important;
     font-size: 13px !important;
     font-weight: 500 !important;
-    color: rgba(200, 216, 234, 0.6) !important;
+    color: rgba(247,240,240,0.55) !important;
     border-radius: 12px !important;
     padding: 8px 20px !important;
     transition: all 0.25s ease !important;
@@ -330,42 +353,42 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 }
 
 [data-testid="stTabs"] [data-baseweb="tab"]:hover {
-    color: #e8edf5 !important;
-    background: rgba(255,255,255,0.06) !important;
+    color: var(--cream) !important;
+    background: rgba(72,161,17,0.12) !important;
 }
 
 [data-testid="stTabs"] [aria-selected="true"] {
-    background: linear-gradient(135deg, rgba(13,71,161,0.5), rgba(76,175,80,0.3)) !important;
-    color: #fff !important;
-    box-shadow: 0 2px 12px rgba(13,71,161,0.3) !important;
+    background: linear-gradient(135deg, rgba(37,103,30,0.65), rgba(72,161,17,0.45)) !important;
+    color: var(--cream) !important;
+    box-shadow: 0 2px 12px rgba(72,161,17,0.3), 0 0 0 1px rgba(242,181,11,0.15) !important;
 }
 
-[data-baseweb="tab-highlight"] {
-    display: none !important;
-}
-
-[data-baseweb="tab-border"] {
-    display: none !important;
-}
+[data-baseweb="tab-highlight"] { display: none !important; }
+[data-baseweb="tab-border"]    { display: none !important; }
 
 /* ============================================================
    PROGRESS BARS — ANIMATED GRADIENT
    ============================================================ */
 [data-testid="stProgress"] > div > div > div > div {
-    background: linear-gradient(90deg, #0d47a1, #1976d2, #4caf50, #0d47a1) !important;
+    background: linear-gradient(90deg,
+        var(--dark-green),
+        var(--bright-green),
+        var(--gold),
+        var(--bright-green),
+        var(--dark-green)) !important;
     background-size: 200% 100% !important;
     border-radius: 100px !important;
-    animation: progressFlow 2s linear infinite !important;
-    box-shadow: 0 0 10px rgba(76, 175, 80, 0.4) !important;
+    animation: progressFlow 2.5s linear infinite !important;
+    box-shadow: 0 0 10px rgba(72,161,17,0.45) !important;
 }
 
 @keyframes progressFlow {
-    0%   { background-position: 0% 0%; }
+    0%   { background-position: 0%   0%; }
     100% { background-position: 200% 0%; }
 }
 
 [data-testid="stProgress"] > div > div > div {
-    background: rgba(255,255,255,0.06) !important;
+    background: rgba(37,103,30,0.18) !important;
     border-radius: 100px !important;
     height: 8px !important;
     overflow: hidden !important;
@@ -375,69 +398,69 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
    CARDS — GLASS MORPHISM
    ============================================================ */
 .form-card {
-    background: rgba(12, 20, 40, 0.7) !important;
+    background: rgba(10, 25, 8, 0.72) !important;
     backdrop-filter: blur(20px) saturate(160%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
-    border: 1px solid rgba(76, 175, 80, 0.1) !important;
+    border: 1px solid rgba(72,161,17,0.14) !important;
     border-radius: 24px !important;
     padding: 32px !important;
     margin-bottom: 24px !important;
     box-shadow:
-        0 8px 32px rgba(0,0,0,0.4),
-        0 1px 0 rgba(255,255,255,0.05) inset,
-        0 -1px 0 rgba(0,0,0,0.2) inset !important;
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+        0 8px 32px rgba(0,0,0,0.45),
+        inset 0 1px 0 rgba(247,240,240,0.04),
+        inset 0 -1px 0 rgba(0,0,0,0.2) !important;
+    transition: all 0.35s cubic-bezier(0.16,1,0.3,1) !important;
+    animation: fadeSlideUp 0.6s cubic-bezier(0.16,1,0.3,1) both !important;
 }
 
 .form-card:hover {
-    border-color: rgba(76, 175, 80, 0.2) !important;
+    border-color: rgba(72,161,17,0.28) !important;
     box-shadow:
         0 16px 48px rgba(0,0,0,0.5),
-        0 0 0 1px rgba(76,175,80,0.08),
-        0 1px 0 rgba(255,255,255,0.07) inset !important;
+        0 0 0 1px rgba(242,181,11,0.07),
+        inset 0 1px 0 rgba(247,240,240,0.06) !important;
     transform: translateY(-2px) !important;
 }
 
 .metric-card {
-    background: rgba(12, 20, 40, 0.7) !important;
+    background: rgba(10, 25, 8, 0.72) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
+    border: 1px solid rgba(72,161,17,0.14) !important;
     border-radius: 20px !important;
     padding: 24px 20px !important;
     text-align: center !important;
     margin: 8px 0 !important;
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
-    animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+    transition: all 0.35s cubic-bezier(0.16,1,0.3,1) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
+    animation: fadeSlideUp 0.5s cubic-bezier(0.16,1,0.3,1) both !important;
 }
 
 .metric-card:hover {
-    border-color: rgba(76, 175, 80, 0.25) !important;
+    border-color: rgba(242,181,11,0.25) !important;
     transform: translateY(-4px) !important;
     box-shadow:
-        0 12px 40px rgba(0,0,0,0.45),
-        0 0 30px rgba(76,175,80,0.06) !important;
+        0 12px 40px rgba(0,0,0,0.5),
+        0 0 30px rgba(72,161,17,0.07) !important;
 }
 
 /* ============================================================
    RESULT CARDS
    ============================================================ */
 .approved-card {
-    background: rgba(10, 35, 15, 0.7) !important;
+    background: rgba(8, 28, 6, 0.75) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(76, 175, 80, 0.35) !important;
-    border-left: 5px solid #4caf50 !important;
+    border: 1px solid rgba(72,161,17,0.4) !important;
+    border-left: 5px solid var(--bright-green) !important;
     border-radius: 20px !important;
     padding: 32px 28px !important;
     margin: 24px 0 !important;
     box-shadow:
-        0 8px 32px rgba(0,0,0,0.4),
-        0 0 60px rgba(76, 175, 80, 0.08),
-        inset 0 1px 0 rgba(76,175,80,0.1) !important;
-    animation: approvedPulse 2.5s ease-in-out infinite, fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+        0 8px 32px rgba(0,0,0,0.45),
+        0 0 60px rgba(72,161,17,0.09),
+        inset 0 1px 0 rgba(72,161,17,0.1) !important;
+    animation: approvedPulse 2.5s ease-in-out infinite, fadeSlideUp 0.6s cubic-bezier(0.16,1,0.3,1) both !important;
     position: relative !important;
     overflow: hidden !important;
 }
@@ -447,13 +470,13 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     position: absolute;
     top: -50%; left: -50%;
     width: 200%; height: 200%;
-    background: conic-gradient(from 0deg, transparent 0%, rgba(76,175,80,0.04) 25%, transparent 50%);
+    background: conic-gradient(from 0deg, transparent 0%, rgba(72,161,17,0.05) 25%, transparent 50%);
     animation: rotateSlow 8s linear infinite;
 }
 
 @keyframes approvedPulse {
-    0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 30px rgba(76,175,80,0.06); }
-    50%       { box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(76,175,80,0.15); }
+    0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 30px rgba(72,161,17,0.07); }
+    50%       { box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 70px rgba(72,161,17,0.18), 0 0 120px rgba(242,181,11,0.05); }
 }
 
 @keyframes rotateSlow {
@@ -462,19 +485,19 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 }
 
 .rejected-card {
-    background: rgba(35, 10, 12, 0.7) !important;
+    background: rgba(30, 8, 8, 0.72) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(220, 53, 69, 0.3) !important;
+    border: 1px solid rgba(220,53,69,0.28) !important;
     border-left: 5px solid #dc3545 !important;
     border-radius: 20px !important;
     padding: 32px 28px !important;
     margin: 24px 0 !important;
     box-shadow:
-        0 8px 32px rgba(0,0,0,0.4),
-        0 0 40px rgba(220, 53, 69, 0.06),
-        inset 0 1px 0 rgba(220,53,69,0.08) !important;
-    animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+        0 8px 32px rgba(0,0,0,0.45),
+        0 0 40px rgba(220,53,69,0.07),
+        inset 0 1px 0 rgba(220,53,69,0.07) !important;
+    animation: fadeSlideUp 0.6s cubic-bezier(0.16,1,0.3,1) both !important;
 }
 
 /* ============================================================
@@ -483,13 +506,13 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
 h1, h2, h3 {
     font-family: 'Syne', sans-serif !important;
     letter-spacing: -0.5px !important;
-    color: #e8edf5 !important;
+    color: var(--cream) !important;
 }
 
 h3 {
     font-size: 18px !important;
     font-weight: 700 !important;
-    color: rgba(200, 216, 234, 0.9) !important;
+    color: rgba(247,240,240,0.88) !important;
     letter-spacing: 0px !important;
 }
 
@@ -497,14 +520,13 @@ p, label, span, div {
     font-family: 'DM Sans', sans-serif !important;
 }
 
-/* Label styling */
 [data-testid="stWidgetLabel"] p,
 label {
     font-size: 12px !important;
     font-weight: 600 !important;
     letter-spacing: 0.6px !important;
     text-transform: uppercase !important;
-    color: rgba(200, 216, 234, 0.55) !important;
+    color: rgba(247,240,240,0.48) !important;
     margin-bottom: 6px !important;
 }
 
@@ -512,10 +534,10 @@ label {
    METRICS (MAIN AREA)
    ============================================================ */
 [data-testid="stMetric"] {
-    background: rgba(12, 20, 40, 0.65) !important;
+    background: rgba(10, 25, 8, 0.68) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
+    border: 1px solid rgba(72,161,17,0.14) !important;
     border-radius: 18px !important;
     padding: 20px !important;
     transition: all 0.3s ease !important;
@@ -523,9 +545,9 @@ label {
 }
 
 [data-testid="stMetric"]:hover {
-    border-color: rgba(76, 175, 80, 0.2) !important;
+    border-color: rgba(242,181,11,0.25) !important;
     transform: translateY(-3px) !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px rgba(76,175,80,0.05) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45), 0 0 20px rgba(72,161,17,0.07) !important;
 }
 
 [data-testid="stMetricLabel"] {
@@ -541,8 +563,8 @@ label {
     font-family: 'Syne', sans-serif !important;
     font-size: 28px !important;
     font-weight: 700 !important;
-    color: #e8edf5 !important;
-    background: linear-gradient(135deg, #4fc3f7, #4caf50);
+    color: var(--cream) !important;
+    background: linear-gradient(135deg, var(--gold), var(--bright-green));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -555,23 +577,23 @@ label {
     border-radius: 14px !important;
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(72,161,17,0.15) !important;
     animation: fadeSlideUp 0.4s ease both !important;
 }
 
 [data-testid="stAlert"][data-baseweb="notification"][kind="info"] {
-    background: rgba(13, 71, 161, 0.15) !important;
-    border-color: rgba(13, 71, 161, 0.3) !important;
+    background: rgba(37,103,30,0.18) !important;
+    border-color: rgba(72,161,17,0.3) !important;
 }
 
 [data-testid="stAlert"][kind="warning"] {
-    background: rgba(255, 160, 0, 0.1) !important;
-    border-color: rgba(255, 160, 0, 0.25) !important;
+    background: rgba(242,181,11,0.1) !important;
+    border-color: rgba(242,181,11,0.28) !important;
 }
 
 [data-testid="stAlert"][kind="success"] {
-    background: rgba(76, 175, 80, 0.12) !important;
-    border-color: rgba(76, 175, 80, 0.28) !important;
+    background: rgba(72,161,17,0.13) !important;
+    border-color: rgba(72,161,17,0.32) !important;
 }
 
 /* ============================================================
@@ -580,16 +602,16 @@ label {
 [data-testid="stDataFrame"] {
     border-radius: 18px !important;
     overflow: hidden !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+    border: 1px solid rgba(72,161,17,0.14) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35) !important;
 }
 
 /* ============================================================
    EXPANDERS
    ============================================================ */
 [data-testid="stExpander"] {
-    background: rgba(12, 20, 40, 0.6) !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
+    background: rgba(10, 25, 8, 0.65) !important;
+    border: 1px solid rgba(72,161,17,0.14) !important;
     border-radius: 16px !important;
     margin-bottom: 10px !important;
     backdrop-filter: blur(12px) !important;
@@ -597,13 +619,13 @@ label {
 }
 
 [data-testid="stExpander"]:hover {
-    border-color: rgba(76, 175, 80, 0.2) !important;
+    border-color: rgba(242,181,11,0.22) !important;
 }
 
 [data-testid="stExpander"] summary {
     font-family: 'DM Sans', sans-serif !important;
     font-weight: 600 !important;
-    color: #c8d8ea !important;
+    color: var(--cream) !important;
     padding: 14px 16px !important;
 }
 
@@ -612,22 +634,17 @@ label {
    ============================================================ */
 hr {
     border: none !important;
-    border-top: 1px solid rgba(255,255,255,0.06) !important;
+    border-top: 1px solid rgba(72,161,17,0.12) !important;
     margin: 24px 0 !important;
 }
 
 /* ============================================================
    SCROLLBAR
    ============================================================ */
-::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-}
-::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.02);
-}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: rgba(37,103,30,0.08); }
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #0d47a1, #4caf50);
+    background: linear-gradient(180deg, var(--dark-green), var(--gold));
     border-radius: 100px;
 }
 
@@ -635,25 +652,25 @@ hr {
    STICKY HEADER EFFECT
    ============================================================ */
 header[data-testid="stHeader"] {
-    background: rgba(8, 13, 26, 0.9) !important;
+    background: rgba(8, 18, 6, 0.92) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
-    border-bottom: 1px solid rgba(76, 175, 80, 0.1) !important;
+    border-bottom: 1px solid rgba(72,161,17,0.12) !important;
 }
 
 /* ============================================================
-   SHIMMER LOADING (applied to stale areas)
+   SHIMMER LOADING
    ============================================================ */
 @keyframes shimmer {
     0%   { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    100% { background-position:  200% 0; }
 }
 
 .shimmer {
     background: linear-gradient(90deg,
-        rgba(255,255,255,0.04) 25%,
-        rgba(255,255,255,0.09) 50%,
-        rgba(255,255,255,0.04) 75%);
+        rgba(37,103,30,0.06) 25%,
+        rgba(72,161,17,0.12) 50%,
+        rgba(37,103,30,0.06) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
     border-radius: 10px;
@@ -673,17 +690,17 @@ header[data-testid="stHeader"] {
 }
 
 .fade-in {
-    animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+    animation: fadeSlideUp 0.6s cubic-bezier(0.16,1,0.3,1) both !important;
 }
 
 /* ============================================================
-   TOOLTIP EFFECT FOR LABELS
+   TOOLTIP EFFECT
    ============================================================ */
 [data-testid="stWidgetLabel"] p::after {
     content: attr(data-tooltip);
     position: absolute;
-    background: rgba(8, 13, 26, 0.95);
-    color: #c8d8ea;
+    background: rgba(8, 18, 6, 0.96);
+    color: var(--cream);
     padding: 5px 10px;
     border-radius: 8px;
     font-size: 11px;
@@ -691,7 +708,7 @@ header[data-testid="stHeader"] {
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.2s ease;
-    border: 1px solid rgba(76,175,80,0.2);
+    border: 1px solid rgba(72,161,17,0.25);
     z-index: 999;
 }
 
@@ -699,9 +716,9 @@ header[data-testid="stHeader"] {
    DOWNLOAD BUTTON
    ============================================================ */
 [data-testid="stDownloadButton"] > button {
-    background: rgba(13, 71, 161, 0.2) !important;
-    border: 1px solid rgba(13, 71, 161, 0.4) !important;
-    color: #4fc3f7 !important;
+    background: rgba(37,103,30,0.2) !important;
+    border: 1px solid rgba(72,161,17,0.35) !important;
+    color: var(--gold) !important;
     font-size: 13px !important;
     padding: 10px 20px !important;
     border-radius: 12px !important;
@@ -709,30 +726,30 @@ header[data-testid="stHeader"] {
 }
 
 [data-testid="stDownloadButton"] > button:hover {
-    background: rgba(13, 71, 161, 0.35) !important;
-    border-color: rgba(79, 195, 247, 0.5) !important;
+    background: rgba(72,161,17,0.2) !important;
+    border-color: rgba(242,181,11,0.45) !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(13, 71, 161, 0.3) !important;
+    box-shadow: 0 6px 20px rgba(72,161,17,0.28) !important;
 }
 
 /* ============================================================
    CAPTION / SMALL TEXT
    ============================================================ */
 [data-testid="stCaptionContainer"] p {
-    color: rgba(200, 216, 234, 0.4) !important;
+    color: rgba(247,240,240,0.38) !important;
     font-size: 12px !important;
     letter-spacing: 0.3px !important;
 }
 
 /* ============================================================
-   SUCCESS CONFETTI GLOW (approved animation boost)
+   SUCCESS CONFETTI GLOW
    ============================================================ */
 @keyframes confettiGlow {
-    0%   { box-shadow: 0 0 20px rgba(76,175,80,0.2); }
-    25%  { box-shadow: 0 0 40px rgba(76,175,80,0.4), 0 0 80px rgba(76,175,80,0.1); }
-    50%  { box-shadow: 0 0 60px rgba(76,175,80,0.5), 0 0 120px rgba(76,175,80,0.15); }
-    75%  { box-shadow: 0 0 40px rgba(76,175,80,0.3); }
-    100% { box-shadow: 0 0 20px rgba(76,175,80,0.2); }
+    0%   { box-shadow: 0 0 20px rgba(72,161,17,0.2); }
+    25%  { box-shadow: 0 0 40px rgba(72,161,17,0.4), 0 0 80px rgba(242,181,11,0.08); }
+    50%  { box-shadow: 0 0 60px rgba(72,161,17,0.5), 0 0 120px rgba(242,181,11,0.1); }
+    75%  { box-shadow: 0 0 40px rgba(72,161,17,0.3); }
+    100% { box-shadow: 0 0 20px rgba(72,161,17,0.18); }
 }
 
 /* ============================================================
@@ -769,7 +786,7 @@ footer, [data-testid="stFooter"] {
         dx: (Math.random() - 0.5) * 0.3,
         dy: (Math.random() - 0.5) * 0.3,
         alpha: Math.random() * 0.5 + 0.15,
-        color: Math.random() > 0.5 ? '13,71,161' : '76,175,80'
+        color: Math.random() > 0.5 ? '72,161,17' : '242,181,11'
     }));
 
     function animate() {
@@ -794,7 +811,7 @@ footer, [data-testid="stFooter"] {
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(76,175,80,${0.06 * (1 - dist/120)})`;
+                    ctx.strokeStyle = `rgba(72,161,17,${0.07 * (1 - dist/120)})`;
                     ctx.lineWidth = 0.5;
                     ctx.stroke();
                 }
@@ -1192,8 +1209,8 @@ elif page == "⚙️ Settings":
 
 # -------------------- FOOTER --------------------
 st.markdown("""
-<div style='text-align: center; color: rgba(200,216,234,0.3); padding: 30px 0; margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.05); font-family: DM Sans, sans-serif; font-size: 13px; letter-spacing: 0.3px;'>
+<div style='text-align: center; color: rgba(247,240,240,0.28); padding: 30px 0; margin-top: 50px; border-top: 1px solid rgba(72,161,17,0.1); font-family: DM Sans, sans-serif; font-size: 13px; letter-spacing: 0.3px;'>
     <p>🏦 FinBank AI &nbsp;·&nbsp; Secure &nbsp;·&nbsp; Intelligent &nbsp;·&nbsp; Transparent</p>
-    <p style='font-size: 11px; color: rgba(200,216,234,0.18); margin-top: 6px;'>© 2024 FinBank AI Technologies. All rights reserved.</p>
+    <p style='font-size: 11px; color: rgba(247,240,240,0.15); margin-top: 6px;'>© 2024 FinBank AI Technologies. All rights reserved.</p>
 </div>
 """, unsafe_allow_html=True)
