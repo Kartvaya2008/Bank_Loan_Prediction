@@ -8,7 +8,7 @@ import random
 # -------------------- PAGE CONFIG --------------------
 st.set_page_config(
     page_title="FinBank AI - Loan Prediction",
-    page_icon="🏦",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -129,6 +129,26 @@ header[data-testid="stHeader"] {
     background: #ffffff !important;
     color: var(--primary) !important;
     border-color: var(--border) !important;
+}
+
+/* Hide Streamlit's auto-generated icon images inside radio labels */
+[data-testid="stSidebar"] [data-testid="stRadio"] label img,
+[data-testid="stSidebar"] [data-testid="stRadio"] label svg,
+[data-testid="stSidebar"] [data-testid="stRadio"] [data-testid="stIconMaterial"],
+[data-testid="stSidebar"] [data-testid="stRadio"] span[data-testid="stIconMaterial"],
+[data-testid="stSidebar"] [data-testid="stRadio"] [class*="icon"],
+[data-testid="stSidebar"] [data-testid="stRadio"] [class*="Icon"] {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Ensure sidebar has enough bottom padding so last element never clips */
+[data-testid="stSidebar"] > div:first-child {
+    padding-bottom: 32px !important;
+    overflow-y: auto !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stMetric"] {
@@ -835,29 +855,36 @@ footer, [data-testid="stFooter"] {
 """, unsafe_allow_html=True)
 # -------------------- SIDEBAR --------------------
 with st.sidebar:
-    st.markdown("## 🏦 FinBank AI")
+    st.markdown("## FinBank AI")
     st.caption("Smart Loan Decision System")
     
     st.divider()
     
     page = st.radio(
         "Navigation",
-        ["🏠 Loan Prediction", "📊 Dashboard", "📋 History", "⚙️ Settings"]
+        ["Loan Prediction", "Dashboard", "History", "Settings"],
+        label_visibility="visible"
     )
     
     st.divider()
     
-    st.markdown("### 📊 Quick Stats")
+    st.markdown("### Quick Stats")
     st.metric("Predictions Today", st.session_state.prediction_count)
     st.metric("Approval Rate", "63%")
     
-    if st.button("🔄 Clear History"):
+    st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
+    
+    if st.button("Clear History", use_container_width=True):
         st.session_state.loan_history = []
         st.session_state.prediction_count = 0
         st.success("History cleared!")
     
     st.divider()
-    st.info("Powered by Machine Learning")
+    st.markdown(
+        "<p style='font-size:13px; color:#6b7280; font-family:Inter,sans-serif;"
+        " padding: 4px 0 16px 0; margin:0;'>Powered by Machine Learning</p>",
+        unsafe_allow_html=True
+    )
 
 # -------------------- PREDICTION FUNCTION --------------------
 def calculate_loan_score(data):
@@ -922,8 +949,8 @@ def calculate_loan_score(data):
     }
 
 # -------------------- MAIN PAGE --------------------
-if page == "🏠 Loan Prediction":
-    st.markdown('<h1 class="main-title">🏦 Bank Loan Prediction</h1>', unsafe_allow_html=True)
+if page == "Loan Prediction":
+    st.markdown('<h1 class="main-title">Bank Loan Prediction</h1>', unsafe_allow_html=True)
     
     col1, col2 = st.columns([3, 2])
     
@@ -959,10 +986,10 @@ if page == "🏠 Loan Prediction":
         
         st.markdown("</div>", unsafe_allow_html=True)
         
-        predict_btn = st.button("🚀 Predict Loan Approval", use_container_width=True)
+        predict_btn = st.button("Predict Loan Approval", use_container_width=True)
     
     with col2:
-        st.markdown("### 💡 Quick Insights")
+        st.markdown("### Quick Insights")
         
         if predict_btn:
             total_income = applicant_income + co_income
@@ -970,20 +997,20 @@ if page == "🏠 Loan Prediction":
             
             insights = []
             if credit_score >= 750:
-                insights.append("✅ Excellent credit score")
+                insights.append("Excellent credit score")
             elif credit_score < 600:
-                insights.append("⚠️ Credit score needs improvement")
+                insights.append("Credit score needs improvement")
             
             if total_income > 5000:
-                insights.append("✅ Strong income level")
+                insights.append("Strong income level")
             
             if employment in ["Salaried", "Business Owner"]:
-                insights.append("✅ Stable employment")
+                insights.append("Stable employment")
             
             for insight in insights:
                 st.info(insight)
         
-        st.markdown("### 📊 Key Factors")
+        st.markdown("### Key Factors")
         factors = [
             ("Credit Score", 35),
             ("Income Stability", 30),
@@ -1020,16 +1047,16 @@ if page == "🏠 Loan Prediction":
         for i in range(100):
             progress_bar.progress(i + 1)
             if i < 30:
-                status_text.text("🔍 Analyzing credit history...")
+                status_text.text("Analyzing credit history...")
             elif i < 60:
-                status_text.text("📊 Calculating financial ratios...")
+                status_text.text("Calculating financial ratios...")
             elif i < 80:
-                status_text.text("🤖 Running prediction models...")
+                status_text.text("Running prediction models...")
             else:
-                status_text.text("📝 Generating final report...")
+                status_text.text("Generating final report...")
             time.sleep(0.02)
         
-        status_text.text("✅ Analysis complete!")
+        status_text.text("Analysis complete!")
         
         result = calculate_loan_score(applicant_data)
         st.session_state.current_prediction = result
@@ -1048,7 +1075,7 @@ if page == "🏠 Loan Prediction":
         if result['approved']:
             st.markdown(f'''
             <div class="approved-card fade-in">
-                <h2>✅ LOAN APPROVED</h2>
+                <h2>LOAN APPROVED</h2>
                 <p style="font-size: 24px;">
                     Approval Probability: <b>{result["probability"]:.1f}%</b>
                 </p>
@@ -1059,7 +1086,7 @@ if page == "🏠 Loan Prediction":
         else:
             st.markdown(f'''
             <div class="rejected-card fade-in">
-                <h2>❌ LOAN NOT APPROVED</h2>
+                <h2>LOAN NOT APPROVED</h2>
                 <p style="font-size: 24px;">
                     Approval Probability: <b>{result["probability"]:.1f}%</b>
                 </p>
@@ -1068,7 +1095,7 @@ if page == "🏠 Loan Prediction":
             ''', unsafe_allow_html=True)
         
         # Detailed Analysis
-        st.markdown("### 📈 Score Breakdown")
+        st.markdown("### Score Breakdown")
         col_a, col_b = st.columns(2)
         
         with col_a:
@@ -1082,7 +1109,7 @@ if page == "🏠 Loan Prediction":
                 st.progress(score / max_score)
         
         # Recommendations
-        st.markdown("### 💡 Recommendations")
+        st.markdown("### Recommendations")
         if not result['approved']:
             if credit_score < 650:
                 st.warning("• Improve your credit score by paying bills on time")
@@ -1091,8 +1118,8 @@ if page == "🏠 Loan Prediction":
             st.info("You can reapply in 6 months after improving these factors")
 
 # -------------------- DASHBOARD --------------------
-elif page == "📊 Dashboard":
-    st.markdown('<h1 class="main-title">📊 Analytics Dashboard</h1>', unsafe_allow_html=True)
+elif page == "Dashboard":
+    st.markdown('<h1 class="main-title">Analytics Dashboard</h1>', unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -1128,13 +1155,13 @@ elif page == "📊 Dashboard":
     st.markdown("---")
     
     # Recent Applications
-    st.markdown("### 📋 Recent Applications")
+    st.markdown("### Recent Applications")
     if st.session_state.loan_history:
         # Get last 10 applications
         recent = st.session_state.loan_history[-10:][::-1]
         
         for app in recent:
-            status = "✅ Approved" if app['approved'] else "❌ Rejected"
+            status = "Approved" if app['approved'] else "Rejected"
             color = "green" if app['approved'] else "red"
             
             st.write(f"""
@@ -1147,8 +1174,8 @@ elif page == "📊 Dashboard":
         st.info("No applications yet. Make your first prediction!")
 
 # -------------------- HISTORY --------------------
-elif page == "📋 History":
-    st.markdown('<h1 class="main-title">📋 Application History</h1>', unsafe_allow_html=True)
+elif page == "History":
+    st.markdown('<h1 class="main-title">Application History</h1>', unsafe_allow_html=True)
     
     if st.session_state.loan_history:
         # Create DataFrame for better display
@@ -1159,7 +1186,7 @@ elif page == "📋 History":
                 'Applicant': entry['name'],
                 'Amount': f"${entry['amount']:,.0f}",
                 'Probability': f"{entry['probability']:.1f}%",
-                'Status': '✅ Approved' if entry['approved'] else '❌ Rejected'
+                'Status': 'Approved' if entry['approved'] else 'Rejected'
             })
         
         df = pd.DataFrame(history_data)
@@ -1168,14 +1195,14 @@ elif page == "📋 History":
         # Export button
         csv = df.to_csv(index=False)
         st.download_button(
-            label="📥 Download as CSV",
+            label="Download as CSV",
             data=csv,
             file_name="loan_history.csv",
             mime="text/csv"
         )
         
         # Statistics
-        st.markdown("### 📊 Statistics")
+        st.markdown("### Statistics")
         approved = len([h for h in st.session_state.loan_history if h['approved']])
         total = len(st.session_state.loan_history)
         avg_prob = np.mean([h['probability'] for h in st.session_state.loan_history])
@@ -1191,8 +1218,8 @@ elif page == "📋 History":
         st.info("No history available yet. Make your first prediction in the Loan Prediction page!")
 
 # -------------------- SETTINGS --------------------
-elif page == "⚙️ Settings":
-    st.markdown('<h1 class="main-title">⚙️ Settings</h1>', unsafe_allow_html=True)
+elif page == "Settings":
+    st.markdown('<h1 class="main-title">Settings</h1>', unsafe_allow_html=True)
     
     with st.expander("Model Settings"):
         threshold = st.slider("Approval Threshold (%)", 50, 80, 65)
@@ -1208,13 +1235,13 @@ elif page == "⚙️ Settings":
         st.write("**Model Type:** Random Forest Ensemble")
         st.write("**Accuracy:** 89.2%")
     
-    if st.button("💾 Save Settings", use_container_width=True):
+    if st.button("Save Settings", use_container_width=True):
         st.success("Settings saved successfully!")
 
 # -------------------- FOOTER --------------------
 st.markdown("""
 <div style='text-align: center; color: #9ca3af; padding: 30px 0; margin-top: 50px; border-top: 1px solid #e5e7eb; font-family: Inter, sans-serif; font-size: 13px;'>
-    <p>🏦 FinBank AI &nbsp;·&nbsp; Secure &nbsp;·&nbsp; Intelligent &nbsp;·&nbsp; Transparent</p>
+    <p>FinBank AI &nbsp;·&nbsp; Secure &nbsp;·&nbsp; Intelligent &nbsp;·&nbsp; Transparent</p>
     <p style='font-size: 11px; color: #d1d5db; margin-top: 4px;'>© 2024 FinBank AI Technologies. All rights reserved.</p>
 </div>
 """, unsafe_allow_html=True)
