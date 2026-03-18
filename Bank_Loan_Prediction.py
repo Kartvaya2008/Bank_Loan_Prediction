@@ -58,6 +58,34 @@ st.markdown("""
 }
 
 /* ============================================================
+   HIDE STREAMLIT DEFAULT CHROME
+   ============================================================ */
+
+/* Hamburger menu */
+#MainMenu                              { visibility: hidden !important; display: none !important; }
+
+/* Default footer */
+footer                                 { visibility: hidden !important; display: none !important; }
+
+/* "keyboard_double" decoration / top header bar */
+header[data-testid="stHeader"]         { visibility: hidden !important; height: 0 !important;
+                                         min-height: 0 !important; padding: 0 !important;
+                                         margin: 0 !important; overflow: hidden !important; }
+
+/* Streamlit top decoration strip (source of "keyboard_double" text) */
+[data-testid="stDecoration"]           { display: none !important; }
+[data-testid="stToolbar"]              { display: none !important; }
+[data-testid="stStatusWidget"]         { display: none !important; }
+
+/* App header wrapper that reserves space for the hidden header */
+[data-testid="stAppViewContainer"] > section:first-child { padding-top: 0 !important; }
+
+/* Remove the blank gap left behind by the hidden header */
+[data-testid="stMain"]                 { padding-top: 0 !important; margin-top: 0 !important; }
+.main .block-container,
+[data-testid="stMainBlockContainer"]   { padding-top: 1.5rem !important; }
+
+/* ============================================================
    GLOBAL BASE
    ============================================================ */
 *, *::before, *::after { box-sizing: border-box; }
@@ -97,6 +125,20 @@ header[data-testid="stHeader"] {
     background: var(--bg-secondary) !important;
     border-right: 1px solid var(--border) !important;
     box-shadow: none !important;
+}
+
+/* Clean sidebar start — remove default top gap and any decoration */
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 16px !important;
+    padding-bottom: 32px !important;
+    overflow-y: auto !important;
+}
+
+/* Hide any icon/image placeholder Streamlit injects at sidebar top */
+[data-testid="stSidebar"] [data-testid="stImage"]:first-child,
+[data-testid="stSidebar"] > div > div:first-child > div[data-testid="stImage"],
+[data-testid="stSidebarUserContent"] img:first-child {
+    display: none !important;
 }
 
 [data-testid="stSidebar"] * {
