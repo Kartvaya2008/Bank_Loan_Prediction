@@ -21,7 +21,7 @@ if 'prediction_count' not in st.session_state:
 if 'current_prediction' not in st.session_state:
     st.session_state.current_prediction = None
 
-# -------------------- CLEAN LIGHT CSS --------------------
+# -------------------- CSS --------------------
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -52,8 +52,9 @@ st.markdown("""
     --shadow-sm     : 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     --shadow-md     : 0 4px 12px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
     --shadow-lg     : 0 8px 24px rgba(0,0,0,0.08), 0 4px 8px rgba(0,0,0,0.04);
-    --radius        : 10px;
-    --radius-lg     : 14px;
+    --radius        : 8px;
+    --radius-lg     : 12px;
+    --field-height  : 44px;
 }
 
 /* ============================================================
@@ -70,7 +71,6 @@ html, body,
     -webkit-font-smoothing: antialiased;
 }
 
-/* Remove any pseudo-element overlays from previous theme */
 [data-testid="stAppViewContainer"]::before,
 [data-testid="stAppViewContainer"]::after {
     display: none !important;
@@ -111,7 +111,6 @@ header[data-testid="stHeader"] {
     letter-spacing: -0.3px !important;
 }
 
-/* Sidebar nav radio */
 [data-testid="stSidebar"] [data-testid="stRadio"] label {
     display: flex !important;
     align-items: center !important;
@@ -132,7 +131,6 @@ header[data-testid="stHeader"] {
     border-color: var(--border) !important;
 }
 
-/* Sidebar metrics */
 [data-testid="stSidebar"] [data-testid="stMetric"] {
     background: #ffffff !important;
     border: 1px solid var(--border) !important;
@@ -162,11 +160,11 @@ header[data-testid="stHeader"] {
    ============================================================ */
 .main-title {
     font-family: 'Inter', sans-serif !important;
-    font-size: clamp(26px, 3.5vw, 38px) !important;
+    font-size: clamp(24px, 3vw, 34px) !important;
     font-weight: 700 !important;
     color: var(--text-primary) !important;
     text-align: center !important;
-    letter-spacing: -0.8px !important;
+    letter-spacing: -0.6px !important;
     line-height: 1.2 !important;
     margin-bottom: 4px !important;
     -webkit-text-fill-color: var(--text-primary) !important;
@@ -174,21 +172,249 @@ header[data-testid="stHeader"] {
 }
 
 /* ============================================================
-   BUTTONS
+   WIDGET LABELS — consistent across all fields
+   ============================================================ */
+[data-testid="stWidgetLabel"] p,
+[data-testid="stWidgetLabel"] label,
+label {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: var(--text-secondary) !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    margin-bottom: 6px !important;
+    line-height: 1.4 !important;
+    display: block !important;
+}
+
+/* Consistent vertical spacing around every widget */
+[data-testid="stTextInput"],
+[data-testid="stNumberInput"],
+[data-testid="stSelectbox"],
+[data-testid="stSlider"] {
+    margin-bottom: 18px !important;
+}
+
+/* ============================================================
+   TEXT INPUT — fixed height, consistent padding
+   ============================================================ */
+[data-testid="stTextInput"] > div,
+[data-testid="stTextInput"] > div > div {
+    height: var(--field-height) !important;
+}
+
+[data-testid="stTextInput"] input {
+    height: var(--field-height) !important;
+    min-height: var(--field-height) !important;
+    background: #ffffff !important;
+    border: 1.5px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    padding: 0 14px !important;
+    line-height: var(--field-height) !important;
+    display: flex !important;
+    align-items: center !important;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+    box-shadow: none !important;
+    width: 100% !important;
+}
+
+[data-testid="stTextInput"] input:focus {
+    border-color: var(--border-focus) !important;
+    box-shadow: 0 0 0 3px rgba(147,197,253,0.25) !important;
+    outline: none !important;
+}
+
+[data-testid="stTextInput"] input::placeholder {
+    color: var(--text-muted) !important;
+    font-style: normal !important;
+}
+
+/* ============================================================
+   NUMBER INPUT — fixed height, consistent padding
+   ============================================================ */
+[data-testid="stNumberInput"] > div,
+[data-testid="stNumberInput"] > div > div {
+    height: var(--field-height) !important;
+}
+
+[data-testid="stNumberInput"] input {
+    height: var(--field-height) !important;
+    min-height: var(--field-height) !important;
+    background: #ffffff !important;
+    border: 1.5px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    padding: 0 14px !important;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stNumberInput"] input:focus {
+    border-color: var(--border-focus) !important;
+    box-shadow: 0 0 0 3px rgba(147,197,253,0.25) !important;
+    outline: none !important;
+}
+
+[data-testid="stNumberInput"] input::placeholder {
+    color: var(--text-muted) !important;
+    font-style: normal !important;
+}
+
+/* Number input stepper buttons */
+[data-testid="stNumberInput"] button {
+    height: calc(var(--field-height) / 2) !important;
+    width: 28px !important;
+    border: none !important;
+    background: var(--bg-secondary) !important;
+    color: var(--text-secondary) !important;
+    font-size: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+[data-testid="stNumberInput"] button:hover {
+    background: var(--bg-tertiary) !important;
+    transform: none !important;
+}
+
+/* ============================================================
+   SELECT BOX — height matches inputs
+   ============================================================ */
+[data-testid="stSelectbox"] > div > div {
+    height: var(--field-height) !important;
+    min-height: var(--field-height) !important;
+    background: #ffffff !important;
+    border: 1.5px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 14px !important;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+    cursor: pointer !important;
+}
+
+[data-testid="stSelectbox"] > div > div:hover {
+    border-color: var(--border-focus) !important;
+    box-shadow: 0 0 0 3px rgba(147,197,253,0.2) !important;
+}
+
+/* Selectbox inner text alignment */
+[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+    height: var(--field-height) !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 !important;
+}
+
+[data-testid="stSelectbox"] span {
+    font-size: 14px !important;
+    color: var(--text-primary) !important;
+    line-height: 1 !important;
+}
+
+/* ============================================================
+   SLIDER — clean layout, no overlap
+   ============================================================ */
+
+/* Container: give slider breathing room */
+[data-testid="stSlider"] {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 18px !important;
+}
+
+/* The value bubble above the thumb — keep it above, not overlapping */
+[data-testid="stSlider"] [data-testid="stThumbValue"] {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--primary) !important;
+    background: var(--primary-light) !important;
+    border: 1px solid var(--primary-soft) !important;
+    border-radius: 5px !important;
+    padding: 2px 7px !important;
+    white-space: nowrap !important;
+    top: -28px !important;
+    transform: translateX(-50%) !important;
+}
+
+/* Track fill */
+[data-testid="stSlider"] div[data-baseweb="slider"] div:first-child {
+    background: var(--primary) !important;
+    height: 4px !important;
+    border-radius: 100px !important;
+}
+
+/* Track background */
+[data-testid="stSlider"] [data-baseweb="slider"] > div {
+    height: 4px !important;
+    background: var(--bg-tertiary) !important;
+    border-radius: 100px !important;
+}
+
+/* Thumb */
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
+    width: 18px !important;
+    height: 18px !important;
+    background: var(--primary) !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.18), var(--shadow-sm) !important;
+    border-radius: 50% !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    cursor: grab !important;
+}
+
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"]:active {
+    cursor: grabbing !important;
+    box-shadow: 0 0 0 5px rgba(37,99,235,0.2) !important;
+}
+
+/* Min/max tick labels */
+[data-testid="stSlider"] [data-testid="stTickBarMin"],
+[data-testid="stSlider"] [data-testid="stTickBarMax"] {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    font-family: 'Inter', sans-serif !important;
+    margin-top: 6px !important;
+}
+
+/* ============================================================
+   BUTTONS — solid, correct height, centered text
    ============================================================ */
 .stButton > button {
     font-family: 'Inter', sans-serif !important;
     font-size: 14px !important;
     font-weight: 600 !important;
     letter-spacing: 0.1px !important;
-    padding: 11px 22px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    padding: 0 24px !important;
     border-radius: var(--radius) !important;
     border: none !important;
     background: var(--primary) !important;
     color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
     transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease !important;
     box-shadow: 0 1px 4px rgba(37,99,235,0.25) !important;
     animation: none !important;
+    line-height: 1 !important;
 }
 
 .stButton > button:hover {
@@ -205,74 +431,7 @@ header[data-testid="stHeader"] {
 .stButton > button::before { display: none !important; }
 
 /* ============================================================
-   INPUT FIELDS
-   ============================================================ */
-[data-testid="stTextInput"] input,
-[data-testid="stNumberInput"] input {
-    background: #ffffff !important;
-    border: 1.5px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    color: var(--text-primary) !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 14px !important;
-    padding: 10px 14px !important;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
-    box-shadow: none !important;
-}
-
-[data-testid="stTextInput"] input:focus,
-[data-testid="stNumberInput"] input:focus {
-    border-color: var(--border-focus) !important;
-    box-shadow: 0 0 0 3px rgba(147,197,253,0.25) !important;
-    outline: none !important;
-}
-
-[data-testid="stTextInput"] input::placeholder,
-[data-testid="stNumberInput"] input::placeholder {
-    color: var(--text-muted) !important;
-    font-style: normal !important;
-}
-
-/* ============================================================
-   SELECT BOXES
-   ============================================================ */
-[data-testid="stSelectbox"] > div > div {
-    background: #ffffff !important;
-    border: 1.5px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    color: var(--text-primary) !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 14px !important;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
-}
-
-[data-testid="stSelectbox"] > div > div:hover {
-    border-color: var(--border-focus) !important;
-    box-shadow: 0 0 0 3px rgba(147,197,253,0.2) !important;
-}
-
-/* ============================================================
-   SLIDER
-   ============================================================ */
-[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
-    background: var(--primary) !important;
-    box-shadow: 0 0 0 4px rgba(37,99,235,0.15) !important;
-    border: 2px solid #ffffff !important;
-}
-
-[data-testid="stSlider"] div[data-baseweb="slider"] div:first-child {
-    background: var(--primary) !important;
-}
-
-/* Slider track background */
-[data-testid="stSlider"] [data-testid="stTickBarMin"],
-[data-testid="stSlider"] [data-testid="stTickBarMax"] {
-    color: var(--text-muted) !important;
-    font-size: 11px !important;
-}
-
-/* ============================================================
-   TABS — CLEAN UNDERLINE STYLE
+   TABS — clean underline style
    ============================================================ */
 [data-testid="stTabs"] [data-baseweb="tab-list"] {
     background: transparent !important;
@@ -281,6 +440,7 @@ header[data-testid="stHeader"] {
     border-radius: 0 !important;
     padding: 0 !important;
     gap: 0 !important;
+    margin-bottom: 20px !important;
 }
 
 [data-testid="stTabs"] [data-baseweb="tab"] {
@@ -314,15 +474,21 @@ header[data-testid="stHeader"] {
 [data-baseweb="tab-highlight"] { display: none !important; }
 [data-baseweb="tab-border"]    { display: none !important; }
 
+/* Tab content area spacing */
+[data-testid="stTabs"] [data-baseweb="tab-panel"] {
+    padding-top: 8px !important;
+}
+
 /* ============================================================
-   PROGRESS BARS — CLEAN BLUE
+   PROGRESS BARS — consistent width and spacing
    ============================================================ */
-[data-testid="stProgress"] > div > div > div > div {
-    background: var(--primary) !important;
-    border-radius: 100px !important;
-    animation: none !important;
-    box-shadow: none !important;
-    transition: width 0.4s ease !important;
+[data-testid="stProgress"] {
+    margin-bottom: 14px !important;
+    width: 100% !important;
+}
+
+[data-testid="stProgress"] > div {
+    width: 100% !important;
 }
 
 [data-testid="stProgress"] > div > div > div {
@@ -330,10 +496,26 @@ header[data-testid="stHeader"] {
     border-radius: 100px !important;
     height: 7px !important;
     overflow: hidden !important;
+    width: 100% !important;
+}
+
+[data-testid="stProgress"] > div > div > div > div {
+    background: var(--primary) !important;
+    border-radius: 100px !important;
+    height: 100% !important;
+    animation: none !important;
+    box-shadow: none !important;
+    transition: width 0.4s ease !important;
+}
+
+/* Spacing between progress label and bar */
+[data-testid="stProgress"] + div,
+div:has(> [data-testid="stProgress"]) {
+    margin-top: 4px !important;
 }
 
 /* ============================================================
-   CUSTOM CARDS
+   FORM CARDS
    ============================================================ */
 .form-card {
     background: #ffffff !important;
@@ -403,7 +585,6 @@ header[data-testid="stHeader"] {
     backdrop-filter: none !important;
 }
 
-/* Override inline styles inside result cards */
 .approved-card h2 { color: var(--success) !important; font-size: 20px !important; }
 .approved-card p  { color: #166534 !important; }
 .rejected-card h2 { color: var(--danger) !important; font-size: 20px !important; }
@@ -421,24 +602,27 @@ h1, h2, h3, h4 {
 }
 
 h3 {
-    font-size: 16px !important;
+    font-size: 15px !important;
     font-weight: 600 !important;
     color: var(--text-primary) !important;
     margin-bottom: 12px !important;
 }
 
-p, label, span, div {
+p, span, div {
     font-family: 'Inter', sans-serif !important;
 }
 
-[data-testid="stWidgetLabel"] p,
-label {
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    letter-spacing: 0 !important;
-    text-transform: none !important;
-    color: var(--text-secondary) !important;
-    margin-bottom: 5px !important;
+/* ============================================================
+   COLUMN ALIGNMENT — equal vertical alignment in rows
+   ============================================================ */
+[data-testid="stHorizontalBlock"] {
+    align-items: flex-start !important;
+    gap: 16px !important;
+}
+
+[data-testid="stHorizontalBlock"] > div {
+    flex: 1 !important;
+    min-width: 0 !important;
 }
 
 /* ============================================================
@@ -488,6 +672,7 @@ label {
     backdrop-filter: none !important;
     font-size: 14px !important;
     font-family: 'Inter', sans-serif !important;
+    padding: 12px 16px !important;
 }
 
 [data-testid="stAlert"][kind="info"] {
@@ -573,10 +758,13 @@ hr {
     color: var(--primary) !important;
     font-size: 13px !important;
     font-weight: 600 !important;
-    padding: 9px 18px !important;
+    height: 40px !important;
+    padding: 0 18px !important;
     border-radius: var(--radius) !important;
     transition: all 0.18s ease !important;
     box-shadow: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
 }
 
 [data-testid="stDownloadButton"] > button:hover {
@@ -597,7 +785,7 @@ hr {
 }
 
 /* ============================================================
-   KEYFRAMES — MINIMAL
+   KEYFRAMES
    ============================================================ */
 @keyframes fadeUp {
     from { opacity: 0; transform: translateY(10px); }
@@ -615,9 +803,6 @@ footer, [data-testid="stFooter"] {
     background: transparent !important;
 }
 
-/* ============================================================
-   CANVAS — HIDE (not needed in light theme)
-   ============================================================ */
 #particleCanvas { display: none !important; }
 
 </style>
