@@ -21,79 +21,795 @@ if 'prediction_count' not in st.session_state:
 if 'current_prediction' not in st.session_state:
     st.session_state.current_prediction = None
 
-# -------------------- CUSTOM CSS --------------------
+# -------------------- PREMIUM CSS --------------------
 st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
-    .main-title {
-        background: linear-gradient(90deg, #0d47a1, #4caf50);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 48px;
-        font-weight: 800;
-        text-align: center;
-        margin-bottom: 10px;
-    }
-    
-    .form-card {
-        background: white;
-        padding: 30px;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        margin-bottom: 30px;
-    }
-    
-    .stButton>button {
-        background: linear-gradient(90deg, #0d47a1, #4caf50);
-        color: white;
-        font-size: 18px;
-        font-weight: bold;
-        padding: 15px;
-        border-radius: 12px;
-        width: 100%;
-        border: none;
-    }
-    
-    .approved-card {
-        background: linear-gradient(135deg, #d4edda, #c3e6cb);
-        padding: 30px;
-        border-radius: 15px;
-        border-left: 8px solid #28a745;
-        margin: 20px 0;
-        animation: pulse 2s infinite;
-    }
-    
-    .rejected-card {
-        background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-        padding: 30px;
-        border-radius: 15px;
-        border-left: 8px solid #dc3545;
-        margin: 20px 0;
-    }
-    
-    .metric-card {
-        background: white;
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        text-align: center;
-        margin: 10px 0;
-    }
-    
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.02); }
-        100% { transform: scale(1); }
-    }
-    
-    .fade-in {
-        animation: fadeIn 1s ease-in;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+/* ============================================================
+   GLOBAL RESET & BASE
+   ============================================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+    font-family: 'DM Sans', sans-serif !important;
+    background: #080d1a !important;
+    color: #e8edf5 !important;
+}
+
+/* Animated mesh background */
+[data-testid="stAppViewContainer"]::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(13,71,161,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(76,175,80,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 60% 10%, rgba(13,71,161,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+    animation: meshShift 12s ease-in-out infinite alternate;
+}
+
+@keyframes meshShift {
+    0%   { opacity: 1; transform: scale(1) translateY(0px); }
+    100% { opacity: 0.85; transform: scale(1.04) translateY(-10px); }
+}
+
+/* Particle dots overlay */
+[data-testid="stAppViewContainer"]::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(circle, rgba(76,175,80,0.08) 1px, transparent 1px),
+        radial-gradient(circle, rgba(13,71,161,0.06) 1px, transparent 1px);
+    background-size: 60px 60px, 90px 90px;
+    background-position: 0 0, 30px 30px;
+    pointer-events: none;
+    z-index: 0;
+    animation: particleDrift 20s linear infinite;
+}
+
+@keyframes particleDrift {
+    from { background-position: 0 0, 30px 30px; }
+    to   { background-position: 60px 60px, 90px 90px; }
+}
+
+/* Ensure all content is above backgrounds */
+[data-testid="stMainBlockContainer"] {
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================================
+   MAIN TITLE
+   ============================================================ */
+.main-title {
+    font-family: 'Syne', sans-serif !important;
+    background: linear-gradient(110deg, #4fc3f7 0%, #4caf50 40%, #0d47a1 80%, #4fc3f7 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: clamp(32px, 5vw, 54px);
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 6px;
+    animation: titleShimmer 4s linear infinite, slideDown 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes titleShimmer {
+    0%   { background-position: 0% center; }
+    100% { background-position: 200% center; }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   SIDEBAR — GLASS PANEL
+   ============================================================ */
+[data-testid="stSidebar"] {
+    background: rgba(10, 16, 35, 0.85) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border-right: 1px solid rgba(76, 175, 80, 0.12) !important;
+    box-shadow: 4px 0 40px rgba(0,0,0,0.4) !important;
+}
+
+[data-testid="stSidebar"] * {
+    color: #c8d8ea !important;
+    font-family: 'DM Sans', sans-serif !important;
+}
+
+[data-testid="stSidebar"] h2 {
+    font-family: 'Syne', sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    background: linear-gradient(90deg, #4fc3f7, #4caf50);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+}
+
+/* Sidebar nav radio items */
+[data-testid="stSidebar"] [data-testid="stRadio"] label {
+    display: block;
+    padding: 10px 16px !important;
+    border-radius: 10px !important;
+    margin: 3px 0 !important;
+    transition: all 0.25s ease !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    border: 1px solid transparent !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
+    background: rgba(76, 175, 80, 0.1) !important;
+    border-color: rgba(76, 175, 80, 0.2) !important;
+    transform: translateX(4px) !important;
+}
+
+/* Sidebar metric cards */
+[data-testid="stSidebar"] [data-testid="stMetric"] {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    margin: 6px 0 !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stMetric"]:hover {
+    background: rgba(76, 175, 80, 0.08) !important;
+    border-color: rgba(76, 175, 80, 0.2) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stMetricLabel"] {
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    color: #7a9bb5 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stMetricValue"] {
+    font-family: 'Syne', sans-serif !important;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #e8edf5 !important;
+}
+
+/* ============================================================
+   BUTTONS — PREMIUM GRADIENT
+   ============================================================ */
+.stButton > button {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px !important;
+    padding: 14px 28px !important;
+    border-radius: 14px !important;
+    border: none !important;
+    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 40%, #2e7d32 80%, #388e3c 100%) !important;
+    background-size: 200% 200% !important;
+    color: #fff !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow:
+        0 4px 15px rgba(13, 71, 161, 0.35),
+        0 1px 3px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.1) !important;
+    animation: gradientShift 4s ease infinite !important;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50%       { background-position: 100% 50%; }
+}
+
+.stButton > button::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.5s ease;
+    transform: skewX(-20deg);
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow:
+        0 8px 30px rgba(13, 71, 161, 0.5),
+        0 4px 12px rgba(76, 175, 80, 0.3),
+        inset 0 1px 0 rgba(255,255,255,0.15) !important;
+}
+
+.stButton > button:hover::before {
+    left: 150%;
+}
+
+.stButton > button:active {
+    transform: translateY(1px) scale(0.98) !important;
+    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.3) !important;
+}
+
+/* ============================================================
+   INPUT FIELDS
+   ============================================================ */
+[data-testid="stTextInput"] input,
+[data-testid="stNumberInput"] input {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 12px !important;
+    color: #e8edf5 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 14px !important;
+    padding: 12px 16px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.2) !important;
+}
+
+[data-testid="stTextInput"] input:focus,
+[data-testid="stNumberInput"] input:focus {
+    border-color: rgba(76, 175, 80, 0.5) !important;
+    box-shadow:
+        inset 0 2px 6px rgba(0,0,0,0.2),
+        0 0 0 3px rgba(76, 175, 80, 0.12),
+        0 0 20px rgba(76, 175, 80, 0.08) !important;
+    background: rgba(255,255,255,0.06) !important;
+}
+
+[data-testid="stTextInput"] input::placeholder,
+[data-testid="stNumberInput"] input::placeholder {
+    color: rgba(200, 216, 234, 0.35) !important;
+    font-style: italic !important;
+}
+
+/* ============================================================
+   SELECT BOXES
+   ============================================================ */
+[data-testid="stSelectbox"] > div > div {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 12px !important;
+    color: #e8edf5 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-testid="stSelectbox"] > div > div:hover {
+    border-color: rgba(76, 175, 80, 0.4) !important;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.08) !important;
+}
+
+/* ============================================================
+   SLIDER
+   ============================================================ */
+[data-testid="stSlider"] [data-baseweb="slider"] [role="slider"] {
+    background: linear-gradient(135deg, #0d47a1, #4caf50) !important;
+    box-shadow: 0 0 12px rgba(76, 175, 80, 0.5) !important;
+}
+
+[data-testid="stSlider"] div[data-baseweb="slider"] div:first-child {
+    background: linear-gradient(90deg, #0d47a1, #4caf50) !important;
+}
+
+/* ============================================================
+   TABS — PILL STYLE
+   ============================================================ */
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 16px !important;
+    padding: 4px !important;
+    gap: 4px !important;
+}
+
+[data-testid="stTabs"] [data-baseweb="tab"] {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: rgba(200, 216, 234, 0.6) !important;
+    border-radius: 12px !important;
+    padding: 8px 20px !important;
+    transition: all 0.25s ease !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+[data-testid="stTabs"] [data-baseweb="tab"]:hover {
+    color: #e8edf5 !important;
+    background: rgba(255,255,255,0.06) !important;
+}
+
+[data-testid="stTabs"] [aria-selected="true"] {
+    background: linear-gradient(135deg, rgba(13,71,161,0.5), rgba(76,175,80,0.3)) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 12px rgba(13,71,161,0.3) !important;
+}
+
+[data-baseweb="tab-highlight"] {
+    display: none !important;
+}
+
+[data-baseweb="tab-border"] {
+    display: none !important;
+}
+
+/* ============================================================
+   PROGRESS BARS — ANIMATED GRADIENT
+   ============================================================ */
+[data-testid="stProgress"] > div > div > div > div {
+    background: linear-gradient(90deg, #0d47a1, #1976d2, #4caf50, #0d47a1) !important;
+    background-size: 200% 100% !important;
+    border-radius: 100px !important;
+    animation: progressFlow 2s linear infinite !important;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.4) !important;
+}
+
+@keyframes progressFlow {
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+}
+
+[data-testid="stProgress"] > div > div > div {
+    background: rgba(255,255,255,0.06) !important;
+    border-radius: 100px !important;
+    height: 8px !important;
+    overflow: hidden !important;
+}
+
+/* ============================================================
+   CARDS — GLASS MORPHISM
+   ============================================================ */
+.form-card {
+    background: rgba(12, 20, 40, 0.7) !important;
+    backdrop-filter: blur(20px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+    border: 1px solid rgba(76, 175, 80, 0.1) !important;
+    border-radius: 24px !important;
+    padding: 32px !important;
+    margin-bottom: 24px !important;
+    box-shadow:
+        0 8px 32px rgba(0,0,0,0.4),
+        0 1px 0 rgba(255,255,255,0.05) inset,
+        0 -1px 0 rgba(0,0,0,0.2) inset !important;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+.form-card:hover {
+    border-color: rgba(76, 175, 80, 0.2) !important;
+    box-shadow:
+        0 16px 48px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(76,175,80,0.08),
+        0 1px 0 rgba(255,255,255,0.07) inset !important;
+    transform: translateY(-2px) !important;
+}
+
+.metric-card {
+    background: rgba(12, 20, 40, 0.7) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 20px !important;
+    padding: 24px 20px !important;
+    text-align: center !important;
+    margin: 8px 0 !important;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+    animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+.metric-card:hover {
+    border-color: rgba(76, 175, 80, 0.25) !important;
+    transform: translateY(-4px) !important;
+    box-shadow:
+        0 12px 40px rgba(0,0,0,0.45),
+        0 0 30px rgba(76,175,80,0.06) !important;
+}
+
+/* ============================================================
+   RESULT CARDS
+   ============================================================ */
+.approved-card {
+    background: rgba(10, 35, 15, 0.7) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(76, 175, 80, 0.35) !important;
+    border-left: 5px solid #4caf50 !important;
+    border-radius: 20px !important;
+    padding: 32px 28px !important;
+    margin: 24px 0 !important;
+    box-shadow:
+        0 8px 32px rgba(0,0,0,0.4),
+        0 0 60px rgba(76, 175, 80, 0.08),
+        inset 0 1px 0 rgba(76,175,80,0.1) !important;
+    animation: approvedPulse 2.5s ease-in-out infinite, fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.approved-card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(76,175,80,0.04) 25%, transparent 50%);
+    animation: rotateSlow 8s linear infinite;
+}
+
+@keyframes approvedPulse {
+    0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 30px rgba(76,175,80,0.06); }
+    50%       { box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(76,175,80,0.15); }
+}
+
+@keyframes rotateSlow {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.rejected-card {
+    background: rgba(35, 10, 12, 0.7) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(220, 53, 69, 0.3) !important;
+    border-left: 5px solid #dc3545 !important;
+    border-radius: 20px !important;
+    padding: 32px 28px !important;
+    margin: 24px 0 !important;
+    box-shadow:
+        0 8px 32px rgba(0,0,0,0.4),
+        0 0 40px rgba(220, 53, 69, 0.06),
+        inset 0 1px 0 rgba(220,53,69,0.08) !important;
+    animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+h1, h2, h3 {
+    font-family: 'Syne', sans-serif !important;
+    letter-spacing: -0.5px !important;
+    color: #e8edf5 !important;
+}
+
+h3 {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: rgba(200, 216, 234, 0.9) !important;
+    letter-spacing: 0px !important;
+}
+
+p, label, span, div {
+    font-family: 'DM Sans', sans-serif !important;
+}
+
+/* Label styling */
+[data-testid="stWidgetLabel"] p,
+label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.6px !important;
+    text-transform: uppercase !important;
+    color: rgba(200, 216, 234, 0.55) !important;
+    margin-bottom: 6px !important;
+}
+
+/* ============================================================
+   METRICS (MAIN AREA)
+   ============================================================ */
+[data-testid="stMetric"] {
+    background: rgba(12, 20, 40, 0.65) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 18px !important;
+    padding: 20px !important;
+    transition: all 0.3s ease !important;
+    animation: fadeSlideUp 0.5s ease both !important;
+}
+
+[data-testid="stMetric"]:hover {
+    border-color: rgba(76, 175, 80, 0.2) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px rgba(76,175,80,0.05) !important;
+}
+
+[data-testid="stMetricLabel"] {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    color: rgba(200, 216, 234, 0.5) !important;
+}
+
+[data-testid="stMetricValue"] {
+    font-family: 'Syne', sans-serif !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    color: #e8edf5 !important;
+    background: linear-gradient(135deg, #4fc3f7, #4caf50);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ============================================================
+   INFO / WARNING / SUCCESS BOXES
+   ============================================================ */
+[data-testid="stAlert"] {
+    border-radius: 14px !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    animation: fadeSlideUp 0.4s ease both !important;
+}
+
+[data-testid="stAlert"][data-baseweb="notification"][kind="info"] {
+    background: rgba(13, 71, 161, 0.15) !important;
+    border-color: rgba(13, 71, 161, 0.3) !important;
+}
+
+[data-testid="stAlert"][kind="warning"] {
+    background: rgba(255, 160, 0, 0.1) !important;
+    border-color: rgba(255, 160, 0, 0.25) !important;
+}
+
+[data-testid="stAlert"][kind="success"] {
+    background: rgba(76, 175, 80, 0.12) !important;
+    border-color: rgba(76, 175, 80, 0.28) !important;
+}
+
+/* ============================================================
+   DATAFRAME
+   ============================================================ */
+[data-testid="stDataFrame"] {
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+}
+
+/* ============================================================
+   EXPANDERS
+   ============================================================ */
+[data-testid="stExpander"] {
+    background: rgba(12, 20, 40, 0.6) !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 16px !important;
+    margin-bottom: 10px !important;
+    backdrop-filter: blur(12px) !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-testid="stExpander"]:hover {
+    border-color: rgba(76, 175, 80, 0.2) !important;
+}
+
+[data-testid="stExpander"] summary {
+    font-family: 'DM Sans', sans-serif !important;
+    font-weight: 600 !important;
+    color: #c8d8ea !important;
+    padding: 14px 16px !important;
+}
+
+/* ============================================================
+   DIVIDERS
+   ============================================================ */
+hr {
+    border: none !important;
+    border-top: 1px solid rgba(255,255,255,0.06) !important;
+    margin: 24px 0 !important;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.02);
+}
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #0d47a1, #4caf50);
+    border-radius: 100px;
+}
+
+/* ============================================================
+   STICKY HEADER EFFECT
+   ============================================================ */
+header[data-testid="stHeader"] {
+    background: rgba(8, 13, 26, 0.9) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(76, 175, 80, 0.1) !important;
+}
+
+/* ============================================================
+   SHIMMER LOADING (applied to stale areas)
+   ============================================================ */
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.shimmer {
+    background: linear-gradient(90deg,
+        rgba(255,255,255,0.04) 25%,
+        rgba(255,255,255,0.09) 50%,
+        rgba(255,255,255,0.04) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 10px;
+}
+
+/* ============================================================
+   KEYFRAME UTILITIES
+   ============================================================ */
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+/* ============================================================
+   TOOLTIP EFFECT FOR LABELS
+   ============================================================ */
+[data-testid="stWidgetLabel"] p::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    background: rgba(8, 13, 26, 0.95);
+    color: #c8d8ea;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border: 1px solid rgba(76,175,80,0.2);
+    z-index: 999;
+}
+
+/* ============================================================
+   DOWNLOAD BUTTON
+   ============================================================ */
+[data-testid="stDownloadButton"] > button {
+    background: rgba(13, 71, 161, 0.2) !important;
+    border: 1px solid rgba(13, 71, 161, 0.4) !important;
+    color: #4fc3f7 !important;
+    font-size: 13px !important;
+    padding: 10px 20px !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-testid="stDownloadButton"] > button:hover {
+    background: rgba(13, 71, 161, 0.35) !important;
+    border-color: rgba(79, 195, 247, 0.5) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(13, 71, 161, 0.3) !important;
+}
+
+/* ============================================================
+   CAPTION / SMALL TEXT
+   ============================================================ */
+[data-testid="stCaptionContainer"] p {
+    color: rgba(200, 216, 234, 0.4) !important;
+    font-size: 12px !important;
+    letter-spacing: 0.3px !important;
+}
+
+/* ============================================================
+   SUCCESS CONFETTI GLOW (approved animation boost)
+   ============================================================ */
+@keyframes confettiGlow {
+    0%   { box-shadow: 0 0 20px rgba(76,175,80,0.2); }
+    25%  { box-shadow: 0 0 40px rgba(76,175,80,0.4), 0 0 80px rgba(76,175,80,0.1); }
+    50%  { box-shadow: 0 0 60px rgba(76,175,80,0.5), 0 0 120px rgba(76,175,80,0.15); }
+    75%  { box-shadow: 0 0 40px rgba(76,175,80,0.3); }
+    100% { box-shadow: 0 0 20px rgba(76,175,80,0.2); }
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer, [data-testid="stFooter"] {
+    background: transparent !important;
+}
+
 </style>
+
+<!-- Floating particles canvas injected via HTML -->
+<canvas id="particleCanvas" style="
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+"></canvas>
+
+<script>
+(function() {
+    const canvas = document.getElementById('particleCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = Array.from({length: 38}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.3,
+        dx: (Math.random() - 0.5) * 0.3,
+        dy: (Math.random() - 0.5) * 0.3,
+        alpha: Math.random() * 0.5 + 0.15,
+        color: Math.random() > 0.5 ? '13,71,161' : '76,175,80'
+    }));
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.x += p.dx; p.y += p.dy;
+            if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+            if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+            ctx.fill();
+        });
+
+        // Draw connecting lines between nearby particles
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 120) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(76,175,80,${0.06 * (1 - dist/120)})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+})();
+</script>
 """, unsafe_allow_html=True)
 
 # -------------------- SIDEBAR --------------------
@@ -476,8 +1192,8 @@ elif page == "⚙️ Settings":
 
 # -------------------- FOOTER --------------------
 st.markdown("""
-<div style='text-align: center; color: #666; padding: 30px 0; margin-top: 50px; border-top: 1px solid #e0e0e0;'>
-    <p>🏦 FinBank AI | Secure • Intelligent • Transparent</p>
-    <p style='font-size: 12px;'>© 2024 FinBank AI Technologies. All rights reserved.</p>
+<div style='text-align: center; color: rgba(200,216,234,0.3); padding: 30px 0; margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.05); font-family: DM Sans, sans-serif; font-size: 13px; letter-spacing: 0.3px;'>
+    <p>🏦 FinBank AI &nbsp;·&nbsp; Secure &nbsp;·&nbsp; Intelligent &nbsp;·&nbsp; Transparent</p>
+    <p style='font-size: 11px; color: rgba(200,216,234,0.18); margin-top: 6px;'>© 2024 FinBank AI Technologies. All rights reserved.</p>
 </div>
 """, unsafe_allow_html=True)
