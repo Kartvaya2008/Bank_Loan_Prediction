@@ -891,9 +891,127 @@ footer, [data-testid="stFooter"] {
     background: transparent !important;
 }
 
+/* ============================================================
+   SIDEBAR RESIZE HANDLE
+   ============================================================ */
+
+/* Allow sidebar to be resized freely */
+[data-testid="stSidebar"] {
+    min-width: 180px !important;
+    max-width: 520px !important;
+    transition: none !important;
+}
+
+/* Resize handle bar — sits on the right border of the sidebar */
+#sb-resizer {
+    position: fixed;
+    top: 0;
+    width: 6px;
+    height: 100vh;
+    z-index: 99999;
+    cursor: col-resize;
+    background: transparent;
+    transition: background 0.18s ease;
+}
+
+#sb-resizer:hover { background: rgba(37,99,235,0.18); }
+#sb-resizer.active { background: rgba(37,99,235,0.28); }
+
+/* Grip dots centred on the handle */
+#sb-resizer::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 36px;
+    background: repeating-linear-gradient(
+        to bottom,
+        #9ca3af 0, #9ca3af 3px,
+        transparent 3px, transparent 7px
+    );
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+#sb-resizer:hover::before,
+#sb-resizer.active::before { opacity: 1; }
+
 #particleCanvas { display: none !important; }
 
 </style>
+
+<!-- Sidebar resize handle element -->
+<div id="sb-resizer"></div>
+
+<script>
+(function () {
+    var MIN_W = 180, MAX_W = 520;
+
+    function getStyle(el, prop) {
+        return parseFloat(window.getComputedStyle(el)[prop]) || 0;
+    }
+
+    function init() {
+        var handle  = document.getElementById('sb-resizer');
+        var sidebar = document.querySelector('[data-testid="stSidebar"]');
+        var mainCon = document.querySelector('[data-testid="stAppViewContainer"]');
+        if (!handle || !sidebar) { setTimeout(init, 300); return; }
+
+        var dragging = false, startX = 0, startW = 0;
+
+        function place() {
+            var r = sidebar.getBoundingClientRect();
+            handle.style.left = (r.right - 3) + 'px';
+        }
+        place();
+
+        // Reposition whenever sidebar might resize (Streamlit rerenders)
+        new ResizeObserver(place).observe(sidebar);
+        window.addEventListener('resize', place);
+
+        handle.addEventListener('mousedown', function (e) {
+            dragging = true;
+            startX   = e.clientX;
+            startW   = sidebar.getBoundingClientRect().width;
+            handle.classList.add('active');
+            document.body.style.cursor     = 'col-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function (e) {
+            if (!dragging) return;
+            var w = Math.min(MAX_W, Math.max(MIN_W, startW + (e.clientX - startX)));
+            // Override Streamlit's inline & CSS width on all sidebar layers
+            [
+                sidebar,
+                sidebar.querySelector('div'),
+                sidebar.querySelector('section')
+            ].forEach(function (el) {
+                if (!el) return;
+                el.style.setProperty('width',    w + 'px', 'important');
+                el.style.setProperty('minWidth', w + 'px', 'important');
+                el.style.setProperty('maxWidth', w + 'px', 'important');
+            });
+            place();
+        });
+
+        document.addEventListener('mouseup', function () {
+            if (!dragging) return;
+            dragging = false;
+            handle.classList.remove('active');
+            document.body.style.cursor     = '';
+            document.body.style.userSelect = '';
+        });
+    }
+
+    // Boot after Streamlit renders
+    setTimeout(init, 900);
+})();
+</script>
 """, unsafe_allow_html=True)
 # -------------------- SIDEBAR --------------------
 with st.sidebar:
